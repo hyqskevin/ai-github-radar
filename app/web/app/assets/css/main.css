@@ -9,60 +9,94 @@
  * DESIGN.md token — colors
  * ============================================================ */
 @theme static {
-  /* 字体族 */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', 'Menlo', 'Consolas', monospace;
 
-  /* DESIGN.md colors.primary / colors.secondary / colors.tertiary / colors.neutral
-   * 用 Nuxt UI primary/neutral 系做映射；tertiary（强调色）单独暴露
-   * 注：Nuxt UI 4 使用 oklch，对原始 hex 做空间转换更准确 */
+  /* DESIGN.md colors.secondary = #938F99 */
+  --color-secondary-50: #FFFFFF;
+  --color-secondary-100: #FFFFFF;
+  --color-secondary-200: #EBE5F5;
+  --color-secondary-300: #CEC8D6;
+  --color-secondary-400: #B0ACB8;
+  --color-secondary-500: #938F99;
+  --color-secondary-600: #76727A;
+  --color-secondary-700: #58565C;
+  --color-secondary-800: #413F43;
+  --color-secondary-900: #2C2B2E;
+  --color-secondary-950: #1D1D1F;
 
-  /* 中性色系（替换 Nuxt UI 默认 slate） */
-  --color-neutral-50:  #F5F3F7;
-  --color-neutral-100: #E6E1E5;
-  --color-neutral-200: #CAC5CD;
-  --color-neutral-300: #938F99;
-  --color-neutral-400: #6E6A73;
-  --color-neutral-500: #49484E;
-  --color-neutral-600: #36343A;
-  --color-neutral-700: #2B292F;
-  --color-neutral-800: #1D1B20;
-  --color-neutral-900: #131217;
-  --color-neutral-950: #0A090C;
+  /* DESIGN.md colors.tertiary = #4FD8EB */
+  --color-tertiary-50: #96FFFF;
+  --color-tertiary-100: #8EFFFF;
+  --color-tertiary-200: #7EFFFF;
+  --color-tertiary-300: #6FFFFF;
+  --color-tertiary-400: #5FFFFF;
+  --color-tertiary-500: #4FD8EB;
+  --color-tertiary-600: #3FADBC;
+  --color-tertiary-700: #2F828D;
+  --color-tertiary-800: #235F67;
+  --color-tertiary-900: #184147;
+  --color-tertiary-950: #102B2F;
 
-  /* secondary 灰系（用于占位 / icon 静默） */
-  --color-secondary-50:  #F5F3F7;
-  --color-secondary-100: #E6E1E5;
-  --color-secondary-200: #D2CDD5;
-  --color-secondary-300: #B5B0BD;
-  --color-secondary-400: #938F99;
-  --color-secondary-500: #75717A;
-  --color-secondary-600: #5C5961;
-  --color-secondary-700: #46444A;
-  --color-secondary-800: #33323A;
-  --color-secondary-900: #232229;
+  /* DESIGN.md colors.neutral = #1D1B20 */
+  --color-neutral-50: #37333D;
+  --color-neutral-100: #34313A;
+  --color-neutral-200: #2E2B33;
+  --color-neutral-300: #29262D;
+  --color-neutral-400: #232026;
+  --color-neutral-500: #1D1B20;
+  --color-neutral-600: #17161A;
+  --color-neutral-700: #111013;
+  --color-neutral-800: #0D0C0E;
+  --color-neutral-900: #09080A;
+  --color-neutral-950: #060506;
 
-  /* tertiary 青色（强调色，唯一） */
-  --color-tertiary-50:  #E5FAFE;
-  --color-tertiary-100: #BFF4FD;
-  --color-tertiary-200: #99EDFB;
-  --color-tertiary-300: #6FE5F9;
-  --color-tertiary-400: #4FD8EB;
-  --color-tertiary-500: #2BC6DC;
-  --color-tertiary-600: #1FAEC2;
-  --color-tertiary-700: #178C9C;
-  --color-tertiary-800: #126B79;
-  --color-tertiary-900: #0E4F5A;
+  /* DESIGN.md colors.success = #7DCE82 */
+  --color-success-50: #EEFFF7;
+  --color-success-100: #E1FFEA;
+  --color-success-200: #C8FFD0;
+  --color-success-300: #AFFFB6;
+  --color-success-400: #96F79C;
+  --color-success-500: #7DCE82;
+  --color-success-600: #64A568;
+  --color-success-700: #4B7C4E;
+  --color-success-800: #375B39;
+  --color-success-900: #263E27;
+  --color-success-950: #19291A;
 
-  /* 状态色（success / warning / error） */
+  /* DESIGN.md colors.warning = #FFB77A */
+  --color-warning-50: #FFFFE8;
+  --color-warning-100: #FFFFDC;
+  --color-warning-200: #FFFFC3;
+  --color-warning-300: #FFFFAB;
+  --color-warning-400: #FFDC92;
+  --color-warning-500: #FFB77A;
+  --color-warning-600: #CC9262;
+  --color-warning-700: #996E49;
+  --color-warning-800: #705136;
+  --color-warning-900: #4D3725;
+  --color-warning-950: #332518;
+
+  /* DESIGN.md colors.error = #FFB4AB */
+  --color-error-50: #FFFFFF;
+  --color-error-100: #FFFFFF;
+  --color-error-200: #FFFFFF;
+  --color-error-300: #FFFCEF;
+  --color-error-400: #FFD8CD;
+  --color-error-500: #FFB4AB;
+  --color-error-600: #CC9089;
+  --color-error-700: #996C67;
+  --color-error-800: #704F4B;
+  --color-error-900: #4D3633;
+  --color-error-950: #332422;
+
+  /* Status colors (hardcoded — DESIGN.md uses success/warning/error names) */
   --color-success-400: #7DCE82;
   --color-success-500: #5BC062;
   --color-success-600: #46A14D;
-
   --color-warning-400: #FFB77A;
   --color-warning-500: #FF9F4D;
   --color-warning-600: #E8872E;
-
   --color-error-400: #FFB4AB;
   --color-error-500: #FF8A7B;
   --color-error-600: #E8635A;

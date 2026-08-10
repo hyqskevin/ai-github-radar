@@ -24,12 +24,13 @@ export default defineAppConfig({
   //       通过 Tailwind 的 arbitrary value 在组件里使用（如 text-tertiary）
   ui: {
     colors: {
-      primary: 'neutral',
+      info: 'primary',
       secondary: 'secondary',
+      primary: 'tertiary',
+      neutral: 'neutral',
       success: 'success',
       warning: 'warning',
       error: 'error',
-      info: 'primary'
     },
     button: {
       defaultVariants: {
