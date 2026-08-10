@@ -8,9 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- 项目骨架：按 agent-loop-scaffold 标准搭 18 目录
-- AGENTS.md / SPEC.md / INSTALL.md / README.md
-- docs/：api-doc / database-design / architecture / phase-roadmap / observability / deployment / scheduled-jobs / TODO
+- **Frontend（Nuxt 4 + Nuxt UI + DESIGN.md）**
+  - `app/web/` Nuxt 4 骨架（含 layouts/default.vue + 1 个 health 端点 + 占位首页）
+  - DESIGN.md：基于 [google-labs-code/design.md](https://github.com/google-labs-code/design.md) 规范的 design token
+  - `scripts/dev.sh` 统一启动脚本（后端 + 前端）
+  - `package.json` 装 @nuxt/ui / pinia / @pinia/nuxt / tailwindcss v4
+  - `app.config.ts` 把 DESIGN.md token 注入 Nuxt UI theme
+- **后端 + 文档**
+  - SPEC.md §3 加 frontend 栈选型
+  - SPEC.md §4 架构图加 Nuxt SSR 层
+  - SPEC.md §5 加 app/web 模块边界
+  - SPEC.md §7.2 加 HTTP 端点（Nuxt Nitro server/api/）
+  - SPEC.md §9 加 vitest + DESIGN.md lint 验收
+  - docs/architecture.md 加 ADR 006（Nuxt 4 SSR + 127.0.0.1 单机）
+  - docs/ui-design.md 新增（A4 必填）
+  - docs/TODO.md 加 12 条 frontend TODO（T101-T112）
 
 ## [0.1.0] - TBD
 

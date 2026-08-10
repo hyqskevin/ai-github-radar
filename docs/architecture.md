@@ -111,3 +111,34 @@
 **替代方案被拒**：
 - (b) Celery — 过度工程
 - (c) APScheduler — 进程死了不自动拉起（daemon 模式又跟 a 重复）
+
+---
+
+## ADR 006 — Nuxt 4 SSR 全栈一体 + 127.0.0.1 单机定位
+
+**日期**：2026-08-10
+**状态**：已采纳
+
+**背景**：用户决策"用 Nuxt 4 + Vue + Pinia + Nuxt UI + DESIGN.md"。三条候选：
+- (a) Nuxt 4 SSR 全栈一体（server/api/ + pages/）— 单进程
+- (b) Nuxt 4 SPA + Python FastAPI 独立后端 — 两进程
+- (c) Nuxt 4 SSR + 中间件化 OAuth GitHub 登录 — 多用户
+
+**决策**：(a) Nuxt 4 SSR 全栈一体 + 绑 127.0.0.1 单机定位。
+
+**原因**：
+- 阶段一用户是单人单机，多进程 / 多用户都是过度工程
+- Nitro server/api/ 可以直接调 Python 函数（spawn 子进程或 import），无需独立 FastAPI
+- 127.0.0.1 绑定 = 无需认证层（OS 级隔离）
+- Nuxt UI + Pinia + DESIGN.md 跟 Nuxt 4 原生集成最少阻力
+
+**替代方案被拒**：
+- (b) SPA + 独立 FastAPI — 两套进程管理、两套部署、SPEC §2 偏离"单人单机"
+- (c) OAuth — 阶段一未到多人阶段；引入 OAuth = 多 6+ 条 TODO、多张表（users / web_sessions / oauth_states）
+
+**降级路径**：如果未来要做团队共享：
+- 加 OAuth（GitHub App）
+- DB 加 users / web_sessions 表
+- 加团队切换 UI（Pinia store 加 active_team_id）
+- HTTP 端点加 `team_id` 参数
+- 现有端点全部保留，鉴权层叠加而非替换
