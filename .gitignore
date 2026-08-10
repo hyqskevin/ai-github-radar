@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/
+*.db
+*.sqlite
+# uv.lock 必须 commit(锁依赖);不忽略。
+# .envrc.local 不该入仓(可能含本地路径),忽略之。
+.envrc.local
+
+# Node
+node_modules/
+frontend/node_modules/
+web/node_modules/
+dist/
+build/
+.vite/
+
+# 沙箱约束下的项目内缓存(uv cache / playwright / npm cache)— 不入仓
+.cache/
+.uv-cache/
+.npm-global/
+.ms-playwright/
+
+# references/ 下分两类:
+#   manuals/ + skills/ — 抓的官方原文(可以入仓,文档层共享)
+#   .index/ — doc-fetcher 本地 cache(纯本地)
+references/.index/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific (按需启用)
+data/
+xhs_images/
+.uploads/
+
+# 备份文件(脚手架自动备份产生的 .bak-YYYYMMDD)
+*.bak-*
+
+# 内置 gitkeep 别被忽略
+!docs/superpowers/specs/.gitkeep
+!docs/superpowers/qa/.gitkeep
+!docs/superpowers/audits/.gitkeep
+!tests/unit/.gitkeep
+!tests/frontend/.gitkeep
+!tests/e2e/.gitkeep

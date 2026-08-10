@@ -1,0 +1,12 @@
+# .loopignore - audit-loop 排除规则
+# 一行一个 glob (支持 fnmatch 通配符), 跳过这些文件/目录的扫描
+# 默认已跳过: node_modules / .venv / dist / build / data / frontend/dist 等
+
+# 生成的 ORM / 客户端代码
+backend/app/models/generated/*.py
+
+# 第三方 wrapper
+frontend/src/lib/thirdparty/*.ts
+
+# 一次性迁移脚本
+backend/scripts/oneoff/*.py

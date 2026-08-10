@@ -1,0 +1,14 @@
+{
+  "preToolUse": [
+    {
+      "tool": "Bash",
+      "command": "node scripts/pre-tool-use-doc-check.mjs"
+    },
+    {
+      "tool": "Agent",
+      "command": "node scripts/pre-tool-use-doc-check.mjs"
+    }
+  ],
+  "fail_closed": true,
+  "__doc_preflight_marker": "doc-preflight"
+}
