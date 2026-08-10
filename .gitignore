@@ -19,6 +19,15 @@ dist/
 build/
 .vite/
 
+# Nuxt 4 自动生成（每次 nuxt dev/build 都重建）
+.nuxt/
+.output/
+.data/
+.cache/nuxt/
+
+# pnpm 自动生成（不应 commit）
+app/web/pnpm-workspace.yaml
+
 # 沙箱约束下的项目内缓存(uv cache / playwright / npm cache)— 不入仓
 .cache/
 .uv-cache/

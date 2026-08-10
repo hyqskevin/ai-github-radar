@@ -1,8 +1,12 @@
 <script setup lang="ts">
-// layouts/default.vue — 全局布局
+// layouts/default.vue — ai-github-radar 全局布局
 // AppBar + SideNav + Content
 // 见 docs/ui-design.md
-const route = useRoute()
+//
+// 设计参照 Nuxt UI 4 dashboard pattern
+// - AppBar: 56px 高, sticky top
+// - SideNav: 240px 宽, sticky, 跟内容区同高
+// - Content: max-w-7xl 居中
 
 const navItems = [
   { label: '推荐', icon: 'i-lucide-sparkles', to: '/' },
@@ -15,26 +19,35 @@ const navItems = [
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col">
+  <div class="h-screen flex flex-col bg-default text-default">
     <!-- AppBar -->
-    <header class="h-14 border-b border-default bg-neutral-900 flex items-center px-4 gap-4">
-      <NuxtLink to="/" class="font-mono font-bold tracking-tight">
-        ai-github-radar
+    <header class="h-14 shrink-0 border-b border-default bg-default/95 backdrop-blur flex items-center px-6 gap-6 sticky top-0 z-10">
+      <NuxtLink to="/" class="flex items-center gap-2 font-mono font-bold text-base tracking-tight">
+        <UIcon name="i-lucide-radar" class="size-5 text-tertiary-400" />
+        <span>ai-github-radar</span>
       </NuxtLink>
       <div class="flex-1" />
       <UColorModeButton />
-      <UButton to="/settings" variant="ghost" icon="i-lucide-settings" size="sm" />
+      <UButton
+        to="/settings"
+        variant="ghost"
+        color="neutral"
+        icon="i-lucide-settings"
+        size="sm"
+        aria-label="设置"
+      />
     </header>
 
-    <div class="flex flex-1">
+    <!-- Body: SideNav + Content -->
+    <div class="flex flex-1 min-h-0">
       <!-- SideNav -->
-      <nav class="w-60 border-r border-default bg-neutral-900/50 p-4">
-        <UNavigationMenu :items="navItems" orientation="vertical" />
-      </nav>
+      <aside class="w-60 shrink-0 border-r border-default bg-elevated/50 overflow-y-auto">
+        <UVerticalNavigation :items="navItems" class="py-4 px-2" />
+      </aside>
 
       <!-- Content -->
-      <main class="flex-1 overflow-auto">
-        <div class="max-w-7xl mx-auto p-6">
+      <main class="flex-1 overflow-y-auto">
+        <div class="max-w-7xl mx-auto px-8 py-8">
           <slot />
         </div>
       </main>
