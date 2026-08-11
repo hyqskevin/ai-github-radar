@@ -1,11 +1,5 @@
 // server/api/health.get.ts
-// 健康检查端点：返回后端状态 + 版本
-// 见 docs/api-doc.md
+// T105 AC-1
+import { getHealth } from '../utils/handlers'
 
-export default defineEventHandler(() => {
-  return {
-    status: 'ok',
-    service: 'ai-github-radar-web',
-    timestamp: new Date().toISOString()
-  }
-})
+export default defineEventHandler(() => getHealth())
