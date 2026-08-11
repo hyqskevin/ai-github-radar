@@ -46,7 +46,7 @@
 | T103 | layouts/default | | | | | | ✅ | ✅ | | | | ✅ | ⚠️ | 4 |
 | **T104** | Pinia keywords store | ✅ | ✅ | | ✅ | ✅ | | | ✅ | | | ✅ | ✅ | **7** |
 | **T105** | Nitro HTTP 8 端点 | ✅ | ✅ | | | ✅ | | ✅ | | | | ✅ | ✅ | **6** |
-| T106 | pages/index | | | | | | ✅ | ✅ | ✅ | ⚠️ | | ✅ | ⚠️ | 5 |
+| **T106** | pages/index Dashboard | | | | | | ✅ | ✅ | ✅ | ⚠️ | | ✅ | ✅ | **5** |
 | T107 | pages/keywords | ✅ | ✅ | ✅ | | ✅ | ✅ | ✅ | ✅ | ⚠️ | | ✅ | ✅ | 9 |
 | T108 | pages/recommendations | ✅ | ✅ | | | ✅ | ✅ | ✅ | ✅ | ⚠️ | | ✅ | ✅ | 8 |
 | T109 | pages/scan | ✅ | ✅ | | ⚠️ | ✅ | ✅ | ✅ | ✅ | ⚠️ | | ✅ | ✅ | 8 |

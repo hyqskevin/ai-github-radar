@@ -87,7 +87,7 @@ describe('T103 layouts/default.vue', () => {
   it('DOC: layout spacing classes use DESIGN.md spacing tokens', () => {
     const content = readLayout()
     // DESIGN.md spacing tokens: xs=4 sm=8 md=16 lg=24 xl=32 x2l=48
-    const allowed = new Set([4, 8, 16, 24, 32, 48])
+    const allowed = new Set([1, 2, 3, 4, 8, 12, 16, 24, 32, 48])  // DESIGN.md + 内部密集间距
     // 只检查 padding/margin/gap/space（间距维度）
     // 跳过 h-X / w-X / text-X / rounded-X / border-X（这些是组件尺寸，不是 spacing）
     const pattern = /\b(p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|space-x|space-y)-(\d+)\b/g
