@@ -7,8 +7,16 @@
 // SPEC: docs/superpowers/specs/2026-08-10-vitest-smoke-design.md
 
 import { defineConfig } from 'vitest/config'
+import { resolve } from 'node:path'
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      // Nuxt 注入的虚拟模块 → vitest 里 mock 掉
+      '#app': resolve(__dirname, 'tests/mocks/app.ts'),
+      '#imports': resolve(__dirname, 'tests/mocks/app.ts')
+    }
+  },
   test: {
     include: ['tests/**/*.test.ts'],
     exclude: ['node_modules', '.nuxt', '.output', 'dist'],

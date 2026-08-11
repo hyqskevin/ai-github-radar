@@ -21,8 +21,8 @@ const navItems = [
 <template>
   <div class="h-screen flex flex-col bg-default text-default">
     <!-- AppBar -->
-    <header class="h-14 shrink-0 border-b border-default bg-default/95 backdrop-blur flex items-center px-6 gap-6 sticky top-0 z-10">
-      <NuxtLink to="/" class="flex items-center gap-2 font-mono font-bold text-base tracking-tight">
+    <header class="h-14 shrink-0 border-b border-default bg-default/95 backdrop-blur flex items-center px-8 gap-8 sticky top-0 z-10">
+      <NuxtLink to="/" class="flex items-center gap-4 font-mono font-bold text-base tracking-tight">
         <UIcon name="i-lucide-radar" class="size-5 text-tertiary-400" />
         <span>ai-github-radar</span>
       </NuxtLink>
@@ -42,7 +42,7 @@ const navItems = [
     <div class="flex flex-1 min-h-0">
       <!-- SideNav -->
       <aside class="w-60 shrink-0 border-r border-default bg-elevated/50 overflow-y-auto">
-        <UVerticalNavigation :items="navItems" class="py-4 px-2" />
+        <UVerticalNavigation :items="navItems" class="py-4 px-4" />
       </aside>
 
       <!-- Content -->

@@ -44,7 +44,7 @@
 | **T101** | vitest smoke | | ✅ | | | | | ⚠️ | | | | | ✅ | ✅ | **4** |
 | **T102** | theme-sync from DESIGN.md | | ✅ | | | | ✅ | ✅ | ✅ | | | ✅ | ✅ | **6** |
 | T103 | layouts/default | | | | | | ✅ | ✅ | | | | ✅ | ⚠️ | 4 |
-| T104 | Pinia stores | ✅ | ✅ | | ⚠️ | ✅ | | | ✅ | | | ✅ | ✅ | 6 |
+| **T104** | Pinia keywords store | ✅ | ✅ | | ✅ | ✅ | | | ✅ | | | ✅ | ✅ | **7** |
 | T105 | Nitro HTTP 9 端点 | ✅ | ✅ | | ⚠️ | ✅ | | ✅ | | | | ✅ | ✅ | 6 |
 | T106 | pages/index | | | | | | ✅ | ✅ | ✅ | ⚠️ | | ✅ | ⚠️ | 5 |
 | T107 | pages/keywords | ✅ | ✅ | ✅ | | ✅ | ✅ | ✅ | ✅ | ⚠️ | | ✅ | ✅ | 9 |
