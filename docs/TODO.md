@@ -51,7 +51,10 @@
   - src:`push/__init__.py`、`push/local.py`
   - spec：docs/superpowers/specs/2026-08-10-push-local-design.md
   - AC：`scan --push local` 写到 `./data/recommendations/YYYY-MM-DD.md`
-- [ ] **T010** — push/feishu.py：飞书 webhook
+- [x] **T010** — push/feishu.py：飞书 webhook (interactive + text + HMAC-SHA256 签名)
+  - spec：docs/superpowers/specs/2026-08-19-push-feishu-design.md
+  - AC：interactive/text payload + 200/StatusCode==0 + 非 2xx 抛错 + 签名开关 + HMAC 基线 → ✅ 15/15 绿
+  - src:`push/feishu.py`
   - spec：docs/superpowers/specs/2026-08-10-push-feishu-design.md
   - AC：飞书群收到消息（用真 webhook 测）
 - [ ] **T011** — push/email.py：SMTP 邮件
