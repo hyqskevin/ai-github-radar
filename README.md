@@ -15,7 +15,7 @@
 
 1. **拉你的 star** — GitHub API 拉所有 star 仓库 + 描述 + 主题 + 语言
 2. **提取关键字** — 用 TF-IDF 或 LLM 找出你 star 过的项目里高频技术信号
-3. **维护关键字订阅** — Web dashboard（Nuxt 4 + Nuxt UI）或 CLI 增删关键字
+3. **维护关键字订阅** — 本地 CLI / Web UI 增删关键字
 4. **周期抓 trending** — 每天 / 每周跑一次 GitHub Trending / search API，过滤出匹配关键字的新项目，推送到你常用的地方（飞书 / 邮件 / 本地文件 / Web dashboard）
 
 ## 怎么用 — 5 步走
@@ -30,11 +30,8 @@ cd ai-github-radar
 ### 第 2 步：装环境
 
 ```bash
-# Python（uv + .venv，路径锁在项目内）
+# Python 3.12 + .venv(路径锁在项目内)
 bash scripts/setup-python.sh
-
-# Node（pnpm，路径锁在项目内）
-bash scripts/setup-node.sh
 ```
 
 ### 第 3 步：配置
@@ -43,77 +40,122 @@ bash scripts/setup-node.sh
 # 复制模板
 cp config/.env.example .env
 
-# 编辑 .env，填：
+# 编辑 .env,填:
 #   GITHUB_TOKEN=<Personal Access Token, scope: public_repo>
 #   RADAR_USER=<你的 GitHub username>
-#   RADAR_FETCH_INTERVAL=daily          # daily | weekly
-#   RADAR_PUSH_TARGET=local              # local | feishu | email
+# 可选:
+#   OPENAI_API_KEY / ANTHROPIC_API_KEY / DEEPSEEK_API_KEY / DASHSCOPE_API_KEY
+#   / MOONSHOT_API_KEY / ZHIPUAI_API_KEY (用 LLM 提关键字)
+#   FEISHU_WEBHOOK_URL (飞书推送)
+#   SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASSWORD / SMTP_TO (邮件推送)
 ```
 
 ### 第 4 步：跑
 
 ```bash
-# 选项 A：统一启动（推荐，同时拉起后端 + 前端）
-./scripts/dev.sh
+# 选项 A:一次性完整闭环
+uv run python -m ai_github_radar.cli init   # 拉 star + 提关键字
+uv run python -m ai_github_radar.cli scan   # 扫描 + 推送
 
-# 选项 B：分开跑
-# 终端 1：后端 daemon
-uv run python -m ai_github_radar.cli daemon
+# 选项 B:起 Web UI (默认 127.0.0.1:8765)
+uv run python -m ai_github_radar.cli web
 
-# 终端 2：前端 dev server
-cd app/web && pnpm dev
+# 选项 C:周期守护(默认 24h 一次)
+uv run python -m ai_github_radar.cli web    # Web UI(同时启用)
+# 后台进程: python -c "from ai_github_radar.jobs import run_forever; run_forever()"
 ```
 
-打开 http://127.0.0.1:5173 看 Web dashboard。
-
-### 第 5 步：跑一次性命令
+### 第 5 步:关键字管理
 
 ```bash
-# 拉你的 star + 提取关键字
-uv run python -m ai_github_radar.cli init
-
-# 一次性扫描 trending
-uv run python -m ai_github_radar.cli scan
+uv run python -m ai_github_radar.cli keyword list
+uv run python -m ai_github_radar.cli keyword add fastapi --weight 5.0
+uv run python -m ai_github_radar.cli keyword toggle agent
+uv run python -m ai_github_radar.cli keyword del python
 ```
 
 ## 当前已实现功能
 
-> 按 [SPEC.md §9 验收清单](./SPEC.md) 跟踪。当前阶段一：
+阶段一 ✅(15/15 后端 TODO):
 
-- [x] 项目骨架（Nuxt 4 + Python + DESIGN.md）
-- [x] SPEC + 13 维度设计文档
-- [x] DESIGN.md（Google design.md 规范）
-- [x] `scripts/dev.sh` 统一启动脚本
-- [ ] T101-T019 / T101-T112（详见 `docs/TODO.md`）
+- [x] **项目骨架** — Python 3.12 + .venv + pyproject + 8 步 loop
+- [x] **SPEC + 13 维度设计文档** — SPEC.md / DESIGN.md / 8 份 docs/
+- [x] **DB 层**(T001-T003) — 4 张表(stars / keywords / trending_snapshots / recommendations),SQLAlchemy ORM + session 管理
+- [x] **GitHub API client**(T004) — 拉 stars + REST + GraphQL + 429 退避
+- [x] **Trending 抓取**(T005) — HTML 解析 + search API 双路径(语言/星级/排序可配)
+- [x] **关键字提取**(T006-T007) — TF-IDF baseline + 多 LLM provider(OpenAI / Anthropic + 国产 DeepSeek / Qwen / Moonshot / Zhipu)
+- [x] **匹配打分**(T008) — stars→keywords→match→rank,language 屏蔽 + 7-day dedupe
+- [x] **本地推送**(T009) — jinja2 Markdown + JSON + stdout 管道,默认 `./data/recommendations/YYYY-MM-DD.{md,json}`
+- [x] **飞书推送**(T010) — webhook + interactive card + text + HMAC-SHA256 签名
+- [x] **邮件推送**(T011) — SMTP multipart/alternative (HTML + text),XSS 转义
+- [x] **CLI 编排**(T012) — `init / scan / keyword / web` 子命令
+- [x] **Web UI**(T013) — FastAPI 本地 UI,渲染推荐 / 关键字表 + REST API CRUD
+- [x] **存储层**(T014) — `session_scope` + 3 个 Repository
+- [x] **周期调度**(T015) — in-process `run_forever` + `run_once`,stop_event 优雅退出
+- [x] **测试 + audit**(T016) — 237 单元测试,**89% 覆盖率**,`audit-loop --strict` 0 ERROR / 0 WARN
 
-## 设计文档（13 维度）
+下一阶段(阶段二):
 
-按 `agent-loop-scaffold` 标准，必填 8 份：
+- [ ] **macOS launchd / Linux systemd** 周期调度脚本
+- [ ] **LLM 摘要缓存**(同 stars 输入复用)
+- [ ] **Docker 镜像**
+- [ ] **多用户隔离**
 
-- [SPEC.md](./SPEC.md) — A1 总设计（9 段）
-- [DESIGN.md](./DESIGN.md) — design token（Google design.md 规范）
-- [docs/api-doc.md](./docs/api-doc.md) — A2 接口设计（CLI + HTTP）
+## 设计文档(13 维度)
+
+按 `agent-loop-scaffold` 标准,必填 8 份:
+
+- [SPEC.md](./SPEC.md) — A1 总设计(9 段)
+- [DESIGN.md](./DESIGN.md) — design token(Google design.md 规范)
+- [docs/api-doc.md](./docs/api-doc.md) — A2 接口设计(CLI + HTTP)
 - [docs/database-design.md](./docs/database-design.md) — A3 数据库设计
-- [docs/ui-design.md](./docs/ui-design.md) — A4 UI 设计（Nuxt 4 dashboard）
-- [docs/architecture.md](./docs/architecture.md) — A5 架构决策（6 条 ADR）
+- [docs/architecture.md](./docs/architecture.md) — A5 架构决策(6 条 ADR)
 - [docs/phase-roadmap.md](./docs/phase-roadmap.md) — A6 阶段路线
 - [docs/observability.md](./docs/observability.md) — A8 可观测性
 - [docs/deployment.md](./docs/deployment.md) — A9 部署与运维
 - [docs/scheduled-jobs.md](./docs/scheduled-jobs.md) — A13 定时任务
 
+## 推送格式
+
+### Markdown(默认)
+
+```markdown
+# GitHub Radar 推荐 — 2026-08-19
+
+> 生成时间: 2026-08-19T12:00:00+00:00  |  候选: 5 条
+
+## 1. 🐍 [owner1/repo1](https://github.com/owner1/repo1)
+Python FastAPI async web framework
+
+- **Score**: `12.340`
+- **Stars today**: `200`
+- **Matched keywords**: `fastapi`, `async`
+
+---
+```
+
+### 飞书 Card
+
+富文本卡片,每个仓库一段,含 emoji + 链接 + 元数据。
+
+### 邮件
+
+multipart/alternative(HTML + text fallback),内联 CSS,HTML 转义防 XSS。
+
 ## 开发规范
 
-走 8 步 loop（见 [AGENTS.md §0](./AGENTS.md)）：
+走 8 步 loop(见 [AGENTS.md §0](./AGENTS.md)):
 
 ```
 [1] 文档前置  [2] TODO 提出  [3] spec 设计  [4] TDD 红
 [5] 实现→绿  [6] 重构       [7] audit     [8] commit
 ```
 
-自查：
+自查:
 
 ```bash
 python3 scripts/audit-loop.py --strict
+PYTHONPATH=src .venv/bin/python -m pytest tests/unit --cov=ai_github_radar
 ```
 
 ## License
@@ -123,5 +165,7 @@ MIT
 ## 致谢
 
 - [agent-loop-scaffold](https://github.com/hyqskevin/agent-loop-scaffold) — 8 步 loop 标准
-- [Nuxt UI](https://ui.nuxt.com) — Vue 组件库
 - [Google design.md](https://github.com/google-labs-code/design.md) — design token 规范
+- [sklearn](https://scikit-learn.org) — TF-IDF 基线
+- [click](https://click.palletsprojects.com) — CLI 框架
+- [FastAPI](https://fastapi.tiangolo.com) — Web UI

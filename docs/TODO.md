@@ -100,8 +100,8 @@
   - 顺手补 2 处真 bug:
     · config.get_settings alias (cli 之前引用不存在的函数)
     · 测试间 cache_clear(load_settings + DB engine)
-- [ ] **T017** — README 勾完"当前已实现功能"
-- [ ] **T018** — CHANGELOG.md 写 v0.1.0 release notes
+- [x] **T017** — README 更新(5 步走 + 15/15 阶段一勾完 + 推送格式样例)
+- [x] **T018** — CHANGELOG v0.1.0 release notes(Keep a Changelog 格式 + Fixed + Documentation)
 - [ ] **T019** — git tag v0.1.0
 
 ### Frontend（Nuxt 4 + Nuxt UI + DESIGN.md）
