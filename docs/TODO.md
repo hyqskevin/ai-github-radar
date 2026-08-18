@@ -80,9 +80,11 @@
   - AC：每个子命令 --help + exit code 0 + repo CRUD 走通 → ✅ 9/9 绿
   - src:`cli/__init__.py`、`cli/__main__.py`、`cli/init_cmd.py`、`cli/scan_cmd.py`、`cli/keyword_cmd.py`、`cli/web_cmd.py`
   - 入口:`python -m ai_github_radar.cli {init|scan|keyword|web}`
-- [ ] **T013** — cli/daemon.py：asyncio 周期守护
-  - spec：docs/superpowers/specs/2026-08-10-daemon-design.md
-  - AC：`daemon` 前台跑 30 秒能触发 1 次 scan
+- [x] **T013** — web/ (FastAPI 本地 UI)
+  - spec：docs/superpowers/specs/2026-08-19-web-design.md
+  - AC：/ 渲染推荐 + /keywords 渲染表 + /api/keywords CRUD + /api/scan 触发 → ✅ 13/13 绿
+  - src:`web/__init__.py`、`web/app.py`
+  - 入口:`radar web` (uvicorn 阻塞) 或 TestClient 测
 - [ ] **T014** — scripts/com.kevin.ai-github-radar.plist（macOS launchd）
   - spec：docs/scheduled-jobs.md
   - AC：launchctl load 不报错
