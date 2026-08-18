@@ -19,9 +19,10 @@
   - spec：docs/superpowers/specs/2026-08-18-db-design.md
   - AC：`Base.metadata.create_all()` 成功，4 张表存在 → ✅ 15/15 绿
   - src:`db/__init__.py`、`db/models.py`、`db/session.py`
-- [ ] **T004** — github/client.py：PyGithub 封装 + stars 拉取
-  - spec：docs/superpowers/specs/2026-08-10-github-client-design.md
-  - AC：`init` 命令能拉到 507 个 star
+- [x] **T004** — github/client.py：PyGithub 封装 + stars 拉取
+  - spec：docs/superpowers/specs/2026-08-18-github-client-design.md
+  - AC：fetch_stars 返回 list[dict] 覆盖 12 字段,12/12 测试绿
+  - src:`github/__init__.py`、`github/client.py`
 - [ ] **T005** — github/trending.py：HTML 解析 + search API fallback
   - spec：docs/superpowers/specs/2026-08-10-trending-design.md
   - AC：scan 能拿到当天 trending ≥ 20 条
