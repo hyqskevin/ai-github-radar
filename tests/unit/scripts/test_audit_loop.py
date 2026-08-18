@@ -189,3 +189,22 @@ def test_c9_unknown_level_exits_with_error(tmp_path: Path) -> None:
     """C9: --level 含未知 level,argparse 报 error 退出码 2。"""
     result = _run_audit(tmp_path, "--level", "L99")
     assert result.returncode == 2
+
+
+def test_c11_l2_accepts_non_numeric_id_prefix(tmp_path: Path) -> None:
+    """C11: L2 接受 TODO(PRE-001) / TODO(INFRA) 等非数字 ID,不报 WARN。"""
+    _seed_required_docs(tmp_path)
+    _git_init_with_commit(tmp_path, "TODO(PRE-001): add scaffold\n")
+    # 再加一个非数字 commit(用 touch 新文件再 add + commit)
+    (tmp_path / "extra.md").write_text("# extra\n", encoding="utf-8")
+    subprocess.run(["git", "add", "extra.md"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "TODO(INFRA): docs slim\n"],
+        cwd=tmp_path,
+        check=True,
+    )
+    result = _run_audit(tmp_path)
+    assert "[L2] OK" in result.stdout, (
+        f"L2 should accept non-numeric IDs; stdout={result.stdout!r}"
+    )
+    assert result.returncode == 0

@@ -135,7 +135,7 @@ def audit_l2(root: Path) -> Report:
             r.warnings.append(f"unparseable commit line: {line!r}")
             continue
         sha, subject = parts
-        if not re.match(r"^TODO\(\d+\):", subject):
+        if not re.match(r"^TODO\([A-Za-z0-9_-]+\):", subject):
             r.warnings.append(f"commit without TODO(<id>): prefix: {sha} {subject}")
     return r
 

@@ -126,6 +126,11 @@ A 类必填 8 份清单:SPEC.md(A1) + docs/api-doc.md(A2) + docs/database-design
 
 - commit message 首行格式: `TODO(<id>): <动词> <对象>`
   - 例: `TODO(007): add dedupe-by-normalized-title service`
+  - `<id>` 形如 `[A-Za-z0-9_-]+`:
+    - 数字前缀 = 业务 TODO(T001-T019 / T101-T112 等,见 docs/TODO.md)
+    - `PRE-NNN` = 前置基础设施(脚手架、audit 校验器等无 docs/TODO.md 条目的)
+    - `INFRA` = 跨 TODO 的基础设施改动(AGENTS.md / docs/architecture.md ADR 等)
+    - `FIXUP-NNN` = 已有 TODO 的就地修复(修订 commit)
 - 一条 commit 只做一件事,关联一条 TODO id
 - 不允许出现没有 `TODO(<id>):` 前缀的 commit(本地 hook 警告 / CI 阻断)
 
