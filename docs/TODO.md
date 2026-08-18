@@ -102,7 +102,7 @@
     · 测试间 cache_clear(load_settings + DB engine)
 - [x] **T017** — README 更新(5 步走 + 15/15 阶段一勾完 + 推送格式样例)
 - [x] **T018** — CHANGELOG v0.1.0 release notes(Keep a Changelog 格式 + Fixed + Documentation)
-- [ ] **T019** — git tag v0.1.0
+- [x] **T019** — git tag v0.1.0 (`git tag -a v0.1.0 -m "..."`)
 
 ### Frontend（Nuxt 4 + Nuxt UI + DESIGN.md）
 
