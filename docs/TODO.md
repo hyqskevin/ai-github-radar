@@ -57,9 +57,10 @@
   - src:`push/feishu.py`
   - spec：docs/superpowers/specs/2026-08-10-push-feishu-design.md
   - AC：飞书群收到消息（用真 webhook 测）
-- [ ] **T011** — push/email.py：SMTP 邮件
-  - spec：docs/superpowers/specs/2026-08-10-push-email-design.md
-  - AC：发到 SMTP_USER 的邮箱收到
+- [x] **T011** — push/email.py：SMTP multipart/alternative (HTML + text)
+  - spec：docs/superpowers/specs/2026-08-19-push-email-design.md
+  - AC：HTML 内联 CSS + text fallback + multipart + login/TLS 开关 + SMTP 异常 → ✅ 18/18 绿
+  - src:`push/email.py`
 
 ### CLI + 周期
 
