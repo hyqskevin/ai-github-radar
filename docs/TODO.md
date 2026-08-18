@@ -7,15 +7,18 @@
 
 ### 基础设施
 
-- [ ] **T001** — 项目骨架：建 src 目录、pyproject.toml 填依赖
-  - spec：docs/superpowers/specs/2026-08-10-skeleton-design.md
-  - AC：`uv run python -c "import ai_github_radar"` 成功
-- [ ] **T002** — config.py：Pydantic Settings + .env 校验
-  - spec：docs/superpowers/specs/2026-08-10-config-design.md
-  - AC：`ai-github-radar config --validate` 退出码 0
-- [ ] **T003** — db/models.py + db/session.py：SQLAlchemy 4 张表
-  - spec：docs/superpowers/specs/2026-08-10-db-design.md
-  - AC：`Base.metadata.create_all()` 成功，4 张表存在
+- [x] **T001** — 项目骨架：建 src 目录、pyproject.toml 填依赖
+  - spec：docs/superpowers/specs/2026-08-18-skeleton-design.md
+  - AC：`uv run python -c "import ai_github_radar"` 成功 → ✅ 5/5 绿
+  - src:`__init__.py`
+- [x] **T002** — config.py：Pydantic Settings + .env 校验
+  - spec：docs/superpowers/specs/2026-08-18-config-design.md
+  - AC：`python -m ai_github_radar.config --validate` 退出码 0 → ✅ 10/10 绿
+  - src:`config.py`
+- [x] **T003** — db/models.py + db/session.py：SQLAlchemy 4 张表
+  - spec：docs/superpowers/specs/2026-08-18-db-design.md
+  - AC：`Base.metadata.create_all()` 成功，4 张表存在 → ✅ 15/15 绿
+  - src:`db/__init__.py`、`db/models.py`、`db/session.py`
 - [ ] **T004** — github/client.py：PyGithub 封装 + stars 拉取
   - spec：docs/superpowers/specs/2026-08-10-github-client-design.md
   - AC：`init` 命令能拉到 507 个 star
