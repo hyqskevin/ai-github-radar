@@ -4,12 +4,13 @@
 > 把 `TODO → spec → TDD → impl → audit` 这条流水线固化成 8 步 loop。
 > 本文件随项目 `git init` 提交,不随会话结束而消失。
 >
-> **本文件只写脚手架架构 / loop 流程 / 反模式 / 沙箱约束**。具体内容(13 维度 / 目录结构 / Python 栈 / doc-fetcher 流程) 见:
-> - 13 维度全表 → [docs/dimensions.md](./docs/dimensions.md)
-> - 前后端目录 → [docs/structure.md](./docs/structure.md)
-> - 沙箱行为 → [docs/sandbox-behavior.md](./docs/sandbox-behavior.md)
-> - 工具手册 → [docs/tool-manual-preflight.md](./docs/tool-manual-preflight.md)
-> - Python 栈 → [docs/python-stack.md](./docs/python-stack.md)
+> **本文件只写脚手架架构 / loop 流程 / 反模式 / 沙箱约束**。具体内容见本仓库现有文档:
+> - 13 维度全表(目标/选型/数据流/接口/DB/UI/ADR/阶段/可观测/部署/定时) → 见本文件 §0-§8 + `SPEC.md` 9 段 + `docs/api-doc.md` + `docs/database-design.md` + `docs/ui-design.md` + `docs/architecture.md` + `docs/phase-roadmap.md` + `docs/observability.md` + `docs/deployment.md` + `docs/scheduled-jobs.md`
+> - 沙箱行为 → 见本文件 §6
+> - 测试矩阵 → [docs/testing/c1-c10-matrix.md](./docs/testing/c1-c10-matrix.md)
+> - 已写 specs → [docs/superpowers/specs/](./docs/superpowers/specs/)
+>
+> 注:本文件初版引用了 `docs/dimensions.md` / `docs/structure.md` / `docs/sandbox-behavior.md` / `docs/tool-manual-preflight.md` / `docs/python-stack.md` 五份未创建的辅助文档;经 2026-08-18 精简,统一折叠到本仓库现有的 SPEC.md / docs/*.md,见 `docs/architecture.md` ADR 007。
 
 ---
 
@@ -38,7 +39,7 @@
 ```
 
 **任何一步缺失都要暂停补齐**;**A 类 8 必填文档不全** = 项目未就绪 = **禁止开始任何 TODO 实现**。
-具体维度 / 模板 / 速查表全部在 [docs/dimensions.md](./docs/dimensions.md) —— 本文件不重复。
+A 类必填 8 份清单:SPEC.md(A1) + docs/api-doc.md(A2) + docs/database-design.md(A3) + docs/ui-design.md(A4) + docs/architecture.md(A5) + docs/phase-roadmap.md(A6) + docs/observability.md(A8) + docs/deployment.md(A9)。
 
 ---
 
@@ -66,7 +67,8 @@
 - 错误路径必须有测试(空值 / 权限 / 异常 / 边界)
 - "没写测试" = "没做完"
 
-详细模板见 `tests/_TEMPLATE.md`(10 维度全覆盖)+ `tests/unit/_TEMPLATE.py` + `tests/frontend/_TEMPLATE.{vue,react,svelte,vanilla}.spec.ts`。
+详细模板见 [docs/testing/c1-c10-matrix.md](./docs/testing/c1-c10-matrix.md) 的 C1-C10 维度矩阵 + 各 TODO 在 `docs/superpowers/specs/<slug>-design.md` 里的 B3 测试矩阵节。
+注:`tests/_TEMPLATE.*` 系列占位模板尚未建,后续阶段一后端铺 TDD 时按需补充。
 
 ---
 
@@ -116,7 +118,7 @@
 1. **启动时锁死**(`setup-python.sh` / `setup-node.sh` 头部设 6 个环境变量 → UV_CACHE_DIR / PLAYWRIGHT_BROWSERS_PATH / NPM_CONFIG_CACHE / PIP_CACHE_DIR / UV_PYTHON_INSTALL_DIR / TMPDIR)
 2. **运行时检测**(`scripts/sandbox-detect.sh` 9 项 + `audit-loop L8` 项目边界)
 
-完整列表 / 兼容性矩阵 / 降级策略见 [docs/sandbox-behavior.md](./docs/sandbox-behavior.md)。
+注:`docs/sandbox-behavior.md` 暂未单独建仓,本文件 §6 即为唯一权威来源,待 §9 例外条款触发后单独成文。
 
 ---
 

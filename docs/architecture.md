@@ -142,3 +142,31 @@
 - 加团队切换 UI（Pinia store 加 active_team_id）
 - HTTP 端点加 `team_id` 参数
 - 现有端点全部保留，鉴权层叠加而非替换
+
+---
+
+## ADR 007 — AGENTS.md 引用折叠（精简未建辅助文档）
+
+**日期**：2026-08-18
+**状态**：已采纳
+**触发**：AGENTS.md §0 自我引用。
+
+**背景**：AGENTS.md §0 顶部 + §2 + §6 三处链接到 6 份**实际未创建**的辅助文档：
+- `docs/dimensions.md`（13 维度全表）
+- `docs/structure.md`（前后端目录）
+- `docs/sandbox-behavior.md`（沙箱兼容矩阵）
+- `docs/tool-manual-preflight.md`（工具手册）
+- `docs/python-stack.md`（Python 栈）
+- `tests/_TEMPLATE.{md,py,vue,react,svelte,vanilla.spec.ts}`（TDD 模板）
+
+按 AGENTS.md §0 自身约束「A 类 8 必填文档不全 = 项目未就绪」——这些引用一旦被 AI 助手点开会全部 404，破坏「AI 进入项目先读 AGENTS.md」的入口契约。
+
+**决策**：折叠到仓库现有的等价文档。映射：
+- 13 维度全表 → `SPEC.md` 9 段 + `docs/{api-doc,database-design,ui-design,architecture,phase-roadmap,observability,deployment,scheduled-jobs}.md`（已存在）
+- 沙箱行为 → `AGENTS.md §6`（升级为唯一权威，待 §9 例外条款触发后再单独成文 `docs/sandbox-behavior.md`）
+- TDD 模板 → `docs/testing/c1-c10-matrix.md` + 各 spec 的 B3 节（已存在）
+- Python 栈 → `pyproject.toml` + `AGENTS.md §6`（uv 路径已锁死）
+
+**回退条件**：若项目出现跨工作区复用需求（被外部项目引用 / monorepo 拆分），再把这 6 份单独成文。
+
+**影响范围**：仅文档级；AGENTS.md 的 8 步 loop 逻辑不变，§0-L0 校验清单不变。
