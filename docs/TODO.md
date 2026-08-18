@@ -39,8 +39,11 @@
   - spec：docs/superpowers/specs/2026-08-18-llm-kw-design.md
   - AC：6 provider 注册 + openai 兼容协议分支 + anthropic 分支 + prompt + 重试 + 探测 → ✅ 19/19 绿
   - src:`keywords/llm_upgrade.py`,config 加 5 个新字段(llm_provider/llm_model/deepseek/dashscope/moonshot/zhipuai)
-- [ ] **T008** — recommender/pipeline.py：stars → keywords → match → rank
-  - spec：docs/superpowers/specs/2026-08-10-recommender-design.md
+- [x] **T008** — recommender/pipeline.py：stars → keywords → match → rank
+  - spec：docs/superpowers/specs/2026-08-18-recommender-design.md
+  - AC：50 star → TF-IDF + user_keywords → 25 trending → ranked recs → ✅ 19/19 绿
+  - src:`recommender/__init__.py`、`recommender/pipeline.py`
+  - 关键设计:language token 屏蔽(避免 language 字段污染打分)、score = log(stars_today+2) + explicit_hit*5.0 + implicit_hit*weight
   - AC：scan 输出按 score 降序
 - [ ] **T009** — push/local.py：本地 Markdown / JSON 文件
   - spec：docs/superpowers/specs/2026-08-10-push-local-design.md
