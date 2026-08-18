@@ -6,6 +6,18 @@ import logging
 
 import click
 
+from ai_github_radar.github.client import GitHubClient
+from ai_github_radar.keywords import (
+    detect_provider,
+    extract_keywords_tf_idf,
+    extract_keywords_via_llm,
+)
+from ai_github_radar.storage.db import init_db, session_scope
+from ai_github_radar.storage.repositories import (
+    KeywordRepository,
+    StarRepository,
+)
+
 log = logging.getLogger(__name__)
 
 
@@ -15,18 +27,6 @@ log = logging.getLogger(__name__)
 def cmd_init(user: str | None, no_llm: bool) -> None:
     """初始化:拉 stars + 关键字提取 + 持久化。"""
     from ai_github_radar.config import get_settings
-    from ai_github_radar.github.client import GitHubClient
-    from ai_github_radar.keywords import (
-        detect_provider,
-        extract_keywords_tf_idf,
-        extract_keywords_via_llm,
-    )
-    from ai_github_radar.recommender.pipeline import _star_to_doc
-    from ai_github_radar.storage.db import init_db, session_scope
-    from ai_github_radar.storage.repositories import (
-        KeywordRepository,
-        StarRepository,
-    )
 
     settings = get_settings()
     name = user or settings.radar_user
@@ -41,7 +41,6 @@ def cmd_init(user: str | None, no_llm: bool) -> None:
     with session_scope() as s:
         star_repo = StarRepository(s)
         n_stars = star_repo.upsert_many(star_dicts)
-        # 提关键字
         docs = [_star_to_doc_dict(d) for d in star_dicts]
         provider = None if no_llm else detect_provider()
         if provider is None:
@@ -61,7 +60,6 @@ def cmd_init(user: str | None, no_llm: bool) -> None:
 
 
 def _star_to_doc_dict(d: dict) -> str:
-    """Star dict → TF-IDF 输入文本(与 recommender._star_to_doc 一致)。"""
     parts = [d.get("description") or ""]
     topics = d.get("topics")
     if topics:

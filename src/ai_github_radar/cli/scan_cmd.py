@@ -9,6 +9,23 @@ from typing import Callable
 
 import click
 
+from ai_github_radar.config import get_settings
+from ai_github_radar.github import trending as t_module
+from ai_github_radar.push import (
+    push_email,
+    push_feishu,
+    render_json,
+    write_recommendations,
+)
+from ai_github_radar.recommender.pipeline import rank_recommendations
+from ai_github_radar.storage.db import init_db, session_scope
+from ai_github_radar.storage.repositories import (
+    KeywordRepository,
+    RecommendationRepository,
+    StarRepository,
+    TrendingSnapshotRepository,
+)
+
 log = logging.getLogger(__name__)
 
 
@@ -53,23 +70,6 @@ def do_scan(
     返回 recs 列表(用于 record_push 在外部用),失败返 None。
     """
     _echo = echo or (lambda msg: None)
-
-    from ai_github_radar.config import get_settings
-    from ai_github_radar.github import trending as t_module
-    from ai_github_radar.push import (
-        push_email,
-        push_feishu,
-        render_json,
-        write_recommendations,
-    )
-    from ai_github_radar.recommender.pipeline import rank_recommendations
-    from ai_github_radar.storage.db import init_db, session_scope
-    from ai_github_radar.storage.repositories import (
-        KeywordRepository,
-        RecommendationRepository,
-        StarRepository,
-        TrendingSnapshotRepository,
-    )
 
     settings = get_settings()
     init_db()

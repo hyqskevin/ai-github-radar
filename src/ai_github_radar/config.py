@@ -158,6 +158,10 @@ def load_settings() -> Settings:
         raise ConfigError(msg) from e
 
 
+# Alias for cli/scan_cmd.py compatibility (T012 之前 cli 模块引用)
+get_settings = load_settings
+
+
 def validate_config() -> Settings:
     """跑校验,成功返 Settings 实例。失败抛 ConfigError。"""
     s = load_settings()

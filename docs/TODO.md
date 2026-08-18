@@ -96,7 +96,10 @@
 
 ### 收尾
 
-- [ ] **T016** — 全量 audit + 覆盖率 ≥ 80%
+- [x] **T016** — 全量 audit + 覆盖率 ≥ 80% → ✅ 89% (237 tests, 0 ERROR / 0 WARN)
+  - 顺手补 2 处真 bug:
+    · config.get_settings alias (cli 之前引用不存在的函数)
+    · 测试间 cache_clear(load_settings + DB engine)
 - [ ] **T017** — README 勾完"当前已实现功能"
 - [ ] **T018** — CHANGELOG.md 写 v0.1.0 release notes
 - [ ] **T019** — git tag v0.1.0
