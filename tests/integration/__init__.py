@@ -1,0 +1,1 @@
+"""Integration tests package — uses real DB / filesystem."""

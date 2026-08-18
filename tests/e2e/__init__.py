@@ -1,0 +1,1 @@
+"""E2E tests package — full CLI flow with mocked external APIs."""
