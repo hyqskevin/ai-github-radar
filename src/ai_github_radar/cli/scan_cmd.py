@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
+import sys
 from datetime import datetime, timezone
+from typing import Callable
 
 import click
 
@@ -22,10 +24,36 @@ log = logging.getLogger(__name__)
 @click.option("--language", default=None, help="trending 语言过滤(默认 all)")
 @click.option("--since", default="daily", type=click.Choice(["daily", "weekly", "monthly"]))
 @click.option("--min-score", default=0.0, type=float, help="过滤低分推荐")
-def scan_cmd(
+def cmd_scan(
     push_target: str, top: int, language: str | None, since: str, min_score: float
 ) -> None:
     """扫描 trending + 匹配关键字 + 推送。"""
+    recs = do_scan(
+        push_target=push_target, top=top, language=language,
+        since=since, min_score=min_score, echo=click.echo,
+    )
+    if recs is None:
+        # trending 拉取失败
+        raise click.Abort()
+
+
+def do_scan(
+    *,
+    push_target: str = "local",
+    top: int = 10,
+    language: str | None = None,
+    since: str = "daily",
+    min_score: float = 0.0,
+    echo: Callable[[str], None] | None = None,
+    output_file: str | None = None,
+    stdout: bool = False,
+) -> list[dict] | None:
+    """scan 核心逻辑(供 cli scan_cmd 和 jobs/scheduler 共用)。
+
+    返回 recs 列表(用于 record_push 在外部用),失败返 None。
+    """
+    _echo = echo or (lambda msg: None)
+
     from ai_github_radar.config import get_settings
     from ai_github_radar.github import trending as t_module
     from ai_github_radar.push import (
@@ -46,22 +74,19 @@ def scan_cmd(
     settings = get_settings()
     init_db()
 
-    # 1. 拉 trending
-    click.echo(f"→ fetching trending ({since}, lang={language or 'all'})...")
+    _echo(f"→ fetching trending ({since}, lang={language or 'all'})...")
     try:
         trending_dicts = t_module.fetch_trending_html(language=language, since=since)
     except Exception as e:
-        click.echo(f"✗ trending fetch failed: {e}", err=True)
-        raise click.Abort()
+        _echo(f"✗ trending fetch failed: {e}")
+        return None
 
     if not trending_dicts:
-        click.echo("✗ no trending repos found")
-        return
+        _echo("✗ no trending repos found")
+        return []
 
-    # 2. DB: stars + keywords + dedupe set
     snapshot_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     with session_scope() as s:
-        # 写 trending 快照
         TrendingSnapshotRepository(s).upsert_many([
             {
                 "repo_id": r["repo_id"],
@@ -78,12 +103,10 @@ def scan_cmd(
         kws = KeywordRepository(s).list(enabled_only=True)
         dedupe_ids = RecommendationRepository(s).recent_repo_ids(days=7)
 
-    # 3. 匹配
-    click.echo(
+    _echo(
         f"→ ranking {len(trending_dicts)} candidates "
         f"against {len(stars)} stars, {len(kws)} keywords..."
     )
-    # 转为 TrendingSnapshot-like(用 SimpleNamespace 模拟 ORM 字段)
     from types import SimpleNamespace
     trending_objs = [
         SimpleNamespace(
@@ -103,30 +126,32 @@ def scan_cmd(
         already_recommended_ids=dedupe_ids,
         top_n=top, min_score=min_score,
     )
-    click.echo(f"→ {len(recs)} recommendations")
+    _echo(f"→ {len(recs)} recommendations")
 
-    # 4. 推送
-    if push_target == "stdout":
-        click.echo(render_json(recs))
-    elif push_target == "json":
-        click.echo(render_json(recs))
+    # push
+    if stdout or push_target in ("stdout", "json"):
+        sys.stdout.write(render_json(recs) + "\n")
+        sys.stdout.flush()
     elif push_target == "local":
-        p = write_recommendations(recs)
-        click.echo(f"✓ wrote {p}")
+        if output_file:
+            p = write_recommendations(recs, output_file=output_file)
+        else:
+            p = write_recommendations(recs)
+        _echo(f"✓ wrote {p}")
     elif push_target == "feishu":
         if not settings.feishu_webhook_url:
-            click.echo("✗ FEISHU_WEBHOOK_URL not set", err=True)
-            raise click.Abort()
+            _echo("✗ FEISHU_WEBHOOK_URL not set")
+            return None
         try:
             push_feishu(recs, webhook_url=str(settings.feishu_webhook_url))
-            click.echo(f"✓ pushed to feishu ({len(recs)} items)")
+            _echo(f"✓ pushed to feishu ({len(recs)} items)")
         except Exception as e:
-            click.echo(f"✗ feishu push failed: {e}", err=True)
-            raise click.Abort()
+            _echo(f"✗ feishu push failed: {e}")
+            return None
     elif push_target == "email":
         if not all([settings.smtp_host, settings.smtp_to]):
-            click.echo("✗ SMTP_HOST / SMTP_TO not set", err=True)
-            raise click.Abort()
+            _echo("✗ SMTP_HOST / SMTP_TO not set")
+            return None
         try:
             push_email(
                 recs,
@@ -139,12 +164,12 @@ def scan_cmd(
                 ),
                 smtp_to=settings.smtp_to,
             )
-            click.echo(f"✓ emailed ({len(recs)} items)")
+            _echo(f"✓ emailed ({len(recs)} items)")
         except Exception as e:
-            click.echo(f"✗ email push failed: {e}", err=True)
-            raise click.Abort()
+            _echo(f"✗ email push failed: {e}")
+            return None
 
-    # 5. 记录推送(用于 N-day dedupe)
+    # record_push
     with session_scope() as s:
         rr = RecommendationRepository(s)
         for r in recs:
@@ -154,3 +179,4 @@ def scan_cmd(
                 matched_keywords=r.get("matched_keywords") or [],
                 channel=push_target,
             )
+    return recs

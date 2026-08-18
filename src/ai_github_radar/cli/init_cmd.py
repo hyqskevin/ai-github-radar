@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 @click.command("init")
 @click.option("--user", default=None, help="GitHub username(默认从 config 读)")
 @click.option("--no-llm", is_flag=True, help="强制走 TF-IDF,不用 LLM")
-def init_cmd(user: str | None, no_llm: bool) -> None:
+def cmd_init(user: str | None, no_llm: bool) -> None:
     """初始化:拉 stars + 关键字提取 + 持久化。"""
     from ai_github_radar.config import get_settings
     from ai_github_radar.github.client import GitHubClient

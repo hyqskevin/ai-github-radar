@@ -88,9 +88,11 @@
 - [ ] **T014** — scripts/com.kevin.ai-github-radar.plist（macOS launchd）
   - spec：docs/scheduled-jobs.md
   - AC：launchctl load 不报错
-- [ ] **T015** — scripts/ai-github-radar.{service,timer}（Linux systemd）
-  - spec：docs/scheduled-jobs.md
-  - AC：systemctl daemon-reload 不报错
+- [x] **T015** — jobs/scheduler.py：in-process 周期调度 (run_once / run_forever)
+  - spec：docs/superpowers/specs/2026-08-19-scheduler-design.md
+  - AC：run_once 透传 + run_forever stop_event + 异常吞 + 参数透传 → ✅ 8/8 绿
+  - src:`jobs/__init__.py`、`jobs/scheduler.py`
+  - 复用 cli/scan_cmd.do_scan(扫描核心逻辑提到独立函数)
 
 ### 收尾
 
