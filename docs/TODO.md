@@ -31,9 +31,10 @@
 
 ### 业务核心
 
-- [ ] **T006** — keywords/extractor.py：TF-IDF 提取 + 关键字 CRUD
-  - spec：docs/superpowers/specs/2026-08-10-keywords-design.md
-  - AC：`init` 后 `keyword list` 返回 ≥ 30 条
+- [x] **T006** — keywords/extractor.py + repository.py：TF-IDF 提取 + 关键字 CRUD
+  - spec：docs/superpowers/specs/2026-08-18-keywords-design.md
+  - AC：50 star → TF-IDF → repository → ≥ 30 keywords → ✅ 20/20 绿
+  - src:`keywords/__init__.py`、`keywords/extractor.py`、`keywords/repository.py`
 - [ ] **T007** — keywords/llm_upgrade.py：可选 LLM 升级
   - spec：docs/superpowers/specs/2026-08-10-llm-kw-design.md
   - AC：配 OPENAI_API_KEY 后关键字更聚类
