@@ -75,9 +75,11 @@
 
 ### CLI + 周期
 
-- [ ] **T012** — cli/init.py + cli/scan.py + cli/keyword.py + cli/history.py
+- [x] **T012** — cli/(init/scan/keyword/web) — click 编排入口
   - spec：docs/superpowers/specs/2026-08-19-cli-design.md
-  - AC：每个子命令 `--help` 输出符合 `docs/api-doc.md`
+  - AC：每个子命令 --help + exit code 0 + repo CRUD 走通 → ✅ 9/9 绿
+  - src:`cli/__init__.py`、`cli/__main__.py`、`cli/init_cmd.py`、`cli/scan_cmd.py`、`cli/keyword_cmd.py`、`cli/web_cmd.py`
+  - 入口:`python -m ai_github_radar.cli {init|scan|keyword|web}`
 - [ ] **T013** — cli/daemon.py：asyncio 周期守护
   - spec：docs/superpowers/specs/2026-08-10-daemon-design.md
   - AC：`daemon` 前台跑 30 秒能触发 1 次 scan
