@@ -23,9 +23,11 @@
   - spec：docs/superpowers/specs/2026-08-18-github-client-design.md
   - AC：fetch_stars 返回 list[dict] 覆盖 12 字段,12/12 测试绿
   - src:`github/__init__.py`、`github/client.py`
-- [ ] **T005** — github/trending.py：HTML 解析 + search API fallback
-  - spec：docs/superpowers/specs/2026-08-10-trending-design.md
-  - AC：scan 能拿到当天 trending ≥ 20 条
+- [x] **T005** — github/trending.py：HTML 解析 + search API(双路径:passive + active keyword)
+  - spec：docs/superpowers/specs/2026-08-18-trending-design.md
+  - AC：fetch_trending_html 解析 ≥ 20 条 + search_repositories 按关键词 + star 阈值筛选 → ✅ 16/16 绿
+  - src:`github/trending.py`
+  - 用户扩展：search API 支持 keywords 列表 + min_stars 阈值 + language 过滤 + per_page + sort/order
 
 ### 业务核心
 
