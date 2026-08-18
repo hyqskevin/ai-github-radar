@@ -35,9 +35,10 @@
   - spec：docs/superpowers/specs/2026-08-18-keywords-design.md
   - AC：50 star → TF-IDF → repository → ≥ 30 keywords → ✅ 20/20 绿
   - src:`keywords/__init__.py`、`keywords/extractor.py`、`keywords/repository.py`
-- [ ] **T007** — keywords/llm_upgrade.py：可选 LLM 升级
-  - spec：docs/superpowers/specs/2026-08-10-llm-kw-design.md
-  - AC：配 OPENAI_API_KEY 后关键字更聚类
+- [x] **T007** — keywords/llm_upgrade.py：多 LLM provider (OpenAI/Anthropic + 国产 DeepSeek/Qwen/Moonshot/Zhipu)
+  - spec：docs/superpowers/specs/2026-08-18-llm-kw-design.md
+  - AC：6 provider 注册 + openai 兼容协议分支 + anthropic 分支 + prompt + 重试 + 探测 → ✅ 19/19 绿
+  - src:`keywords/llm_upgrade.py`,config 加 5 个新字段(llm_provider/llm_model/deepseek/dashscope/moonshot/zhipuai)
 - [ ] **T008** — recommender/pipeline.py：stars → keywords → match → rank
   - spec：docs/superpowers/specs/2026-08-10-recommender-design.md
   - AC：scan 输出按 score 降序

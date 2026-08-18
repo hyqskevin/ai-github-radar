@@ -58,8 +58,14 @@ class Settings(BaseSettings):
     smtp_to: Optional[str] = None
 
     # LLM(可选升级)
+    llm_provider: str = "auto"   # "auto" | "openai" | "anthropic" | "deepseek" | "qwen" | "moonshot" | "zhipu"
+    llm_model: Optional[str] = None
     openai_api_key: Optional[SecretStr] = None
     anthropic_api_key: Optional[SecretStr] = None
+    deepseek_api_key: Optional[SecretStr] = None
+    dashscope_api_key: Optional[SecretStr] = None  # Qwen DashScope
+    moonshot_api_key: Optional[SecretStr] = None
+    zhipuai_api_key: Optional[SecretStr] = None
 
     @field_validator("smtp_port")
     @classmethod
