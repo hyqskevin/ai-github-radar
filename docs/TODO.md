@@ -45,7 +45,10 @@
   - src:`recommender/__init__.py`、`recommender/pipeline.py`
   - 关键设计:language token 屏蔽(避免 language 字段污染打分)、score = log(stars_today+2) + explicit_hit*5.0 + implicit_hit*weight
   - AC：scan 输出按 score 降序
-- [ ] **T009** — push/local.py：本地 Markdown / JSON 文件
+- [x] **T009** — push/local.py：jinja2 Markdown + JSON + stdout 管道
+  - spec：docs/superpowers/specs/2026-08-19-push-local-design.md
+  - AC：默认 ./data/recommendations/YYYY-MM-DD.md + 自定义路径 + stdout 输出 → ✅ 22/22 绿
+  - src:`push/__init__.py`、`push/local.py`
   - spec：docs/superpowers/specs/2026-08-10-push-local-design.md
   - AC：`scan --push local` 写到 `./data/recommendations/YYYY-MM-DD.md`
 - [ ] **T010** — push/feishu.py：飞书 webhook
