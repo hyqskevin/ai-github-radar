@@ -64,8 +64,19 @@
 
 ### CLI + 周期
 
+- [x] **T014** — storage/：db.py (session_scope) + repositories.py (Star/Trending/Recommendation)
+  - spec：docs/superpowers/specs/2026-08-19-cli-design.md(被 T012 依赖,提前写)
+  - AC：upsert / list_by_date / N-day dedupe → ✅ 6/6 绿
+  - src:`storage/__init__.py`、`storage/db.py`、`storage/repositories.py`
+- [x] **T011** — push/email.py：SMTP multipart/alternative (HTML + text)
+  - spec：docs/superpowers/specs/2026-08-19-push-email-design.md
+  - AC：HTML 内联 CSS + text fallback + multipart + login/TLS 开关 + SMTP 异常 → ✅ 18/18 绿
+  - src:`push/email.py`
+
+### CLI + 周期
+
 - [ ] **T012** — cli/init.py + cli/scan.py + cli/keyword.py + cli/history.py
-  - spec：docs/superpowers/specs/2026-08-10-cli-design.md
+  - spec：docs/superpowers/specs/2026-08-19-cli-design.md
   - AC：每个子命令 `--help` 输出符合 `docs/api-doc.md`
 - [ ] **T013** — cli/daemon.py：asyncio 周期守护
   - spec：docs/superpowers/specs/2026-08-10-daemon-design.md
