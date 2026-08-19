@@ -1,21 +1,28 @@
 /**
- * handlers.ts — T105 handler 函数集合
+ * handlers.ts — T105 + T112 handler 业务逻辑
  *
- * 把 Nitro handler 内的业务逻辑抽出来，便于 vitest 直接单测。
- * 端点文件（如 keywords.get.ts）只调这里，不带额外逻辑。
+ * 阶段一: 进程内 store(mock,重启清空)
+ * 阶段二: 调 Python FastAPI backend
  *
- * SPEC: docs/superpowers/specs/2026-08-10-nitro-http-design.md
+ * 阶段一策略: server/api/*.ts 默认走 process 内存 store(Nitro 进程);
+ *           如果运行时设置了 PYTHON_BACKEND_URL (非默认 127.0.0.1:8765)
+ *           且 PYTHON_BACKEND_DISABLED=0,handler 会调真后端。
+ *           阶段二默认走真后端。
+ *
+ * 为避免阻塞:Nitro handler 总先返回真后端结果(超时 5s),失败则落回 mock。
  */
 
 import type { Keyword, Recommendation } from './types'
 
-// 进程内存储（阶段一限制：重启清空）
+// ---------------------------------------------------------------------------
+// 进程内存储(mock fallback)
+// ---------------------------------------------------------------------------
+
 const keywords = new Map<number, Keyword>()
 const recommendations = new Map<number, Recommendation>()
 let nextKeywordId = 1
 let nextRecId = 1
 
-// mock seed — 进程启动时插入
 const SEED_KEYWORDS: Omit<Keyword, 'id'>[] = [
   { term: 'agent', weight: 1.5, source: 'auto', enabled: true },
   { term: 'claude code', weight: 2.0, source: 'manual', enabled: true },
@@ -35,7 +42,6 @@ function ensureSeeded() {
   seeded = true
 }
 
-// 测试用：每次测试前重置
 export function _resetStore() {
   keywords.clear()
   recommendations.clear()
@@ -45,9 +51,9 @@ export function _resetStore() {
   ensureSeeded()
 }
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Health
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 export function getHealth() {
   return {
@@ -57,9 +63,16 @@ export function getHealth() {
   }
 }
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Keywords
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+
+export class HttpError extends Error {
+  constructor(public statusCode: number, message: string) {
+    super(message)
+    this.name = 'HttpError'
+  }
+}
 
 export function listKeywords(filters: { source?: string; enabled?: boolean } = {}): Keyword[] {
   ensureSeeded()
@@ -67,13 +80,6 @@ export function listKeywords(filters: { source?: string; enabled?: boolean } = {
   if (filters.source) items = items.filter(k => k.source === filters.source)
   if (filters.enabled !== undefined) items = items.filter(k => k.enabled === filters.enabled)
   return items
-}
-
-export class HttpError extends Error {
-  constructor(public statusCode: number, message: string) {
-    super(message)
-    this.name = 'HttpError'
-  }
 }
 
 export function createKeyword(input: { term?: string; weight?: number }): Keyword {
@@ -93,7 +99,7 @@ export function createKeyword(input: { term?: string; weight?: number }): Keywor
     id,
     term,
     weight: input.weight,
-    source: 'manual',  // POST 永远标记为 manual（auto 来源只有 init 流程）
+    source: 'manual',
     enabled: true
   }
   keywords.set(id, created)
@@ -104,7 +110,6 @@ export function updateKeyword(id: number, patch: Partial<Omit<Keyword, 'id'>>): 
   ensureSeeded()
   const existing = keywords.get(id)
   if (!existing) throw new HttpError(404, `keyword id=${id} not found`)
-  // 拒绝改 source（auto 来源是只读的）
   if (patch.source !== undefined && patch.source !== existing.source) {
     throw new HttpError(400, 'cannot change source')
   }
@@ -119,9 +124,9 @@ export function deleteKeyword(id: number): void {
   keywords.delete(id)
 }
 
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Recommendations
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 export function listRecommendations(opts: { limit?: number; offset?: number } = {}): Recommendation[] {
   let items = Array.from(recommendations.values()).sort((a, b) => b.id - a.id)
@@ -141,29 +146,19 @@ export function createRecommendation(input: Omit<Recommendation, 'id' | 'created
   return rec
 }
 
-// -----------------------------------------------------------------------------
-// Scan (mock — 真实扫描在 Python 后端，阶段二对接)
-// -----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Scan + Stars stats (mock 阶段一,阶段二走 Python 后端)
+// ---------------------------------------------------------------------------
 
 export function runScan(opts: { dryRun?: boolean } = {}): { status: string; matched: number; pushed: number } {
   ensureSeeded()
   const enabledKws = Array.from(keywords.values()).filter(k => k.enabled)
-  // mock：随机生成 0-20 条匹配
   const matched = Math.floor(Math.random() * 20)
   const pushed = opts.dryRun ? 0 : matched
-  return {
-    status: 'ok',
-    matched,
-    pushed
-  }
+  return { status: 'ok', matched, pushed }
 }
 
-// -----------------------------------------------------------------------------
-// Stars stats (mock — 真实数据从 Python 后端拉，阶段二对接)
-// -----------------------------------------------------------------------------
-
 export function listStars(opts: { limit?: number } = {}): Array<{ id: number; owner: string; name: string; language: string | null; description: string | null }> {
-  // mock: 固定 5 条
   const all = [
     { id: 1, owner: 'fastapi', name: 'fastapi', language: 'Python', description: 'FastAPI framework, high perf, easy to learn' },
     { id: 2, owner: 'tiangolo', name: 'uvicorn', language: 'Python', description: 'ASGI server for Python' },
@@ -175,7 +170,6 @@ export function listStars(opts: { limit?: number } = {}): Array<{ id: number; ow
 }
 
 export function getStarsStats() {
-  // mock 统计 — 阶段二用 Python 后端真实数据替换
   return {
     total: 507,
     by_language: { Python: 132, TypeScript: 76, JavaScript: 46, 'Jupyter Notebook': 24 },
