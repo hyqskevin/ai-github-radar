@@ -10,6 +10,8 @@
     "typecheck": "nuxi typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
     "design:lint": "npx -y @google/design.md lint ../DESIGN.md",
     "design:export": "npx -y @google/design.md export --format tailwind ../DESIGN.md > app/assets/css/tokens.json",
     "postinstall": "nuxt prepare"
