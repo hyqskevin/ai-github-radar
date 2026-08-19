@@ -39,7 +39,7 @@ REQUIRED_DOCS: tuple[str, ...] = (
     "docs/deployment.md",
 )
 
-KNOWN_LEVELS: tuple[str, ...] = ("L0", "L1", "L2", "L4", "L7", "L8")
+KNOWN_LEVELS: tuple[str, ...] = ("L0", "L1", "L2", "L4", "L5", "L7", "L8")
 
 FORBIDDEN_DOC_PATHS: tuple[str, ...] = (".trae", "doc/spec")
 
@@ -137,6 +137,33 @@ def audit_l2(root: Path) -> Report:
         sha, subject = parts
         if not re.match(r"^TODO\([A-Za-z0-9_-]+\):", subject):
             r.warnings.append(f"commit without TODO(<id>): prefix: {sha} {subject}")
+    return r
+
+
+def audit_l5(root: Path) -> Report:
+    """DESIGN.md ↔ app/web/app/assets/css/main.css 交叉验证。
+
+    调 scripts/design-check.py subprocess,把 stderr 当 audit 报告。
+    """
+    r = Report("L5")
+    script = root / "scripts" / "design-check.py"
+    if not script.exists():
+        r.warnings.append(f"scripts/design-check.py not found: skipping L5")
+        r.status = "skip"
+        return r
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except subprocess.TimeoutExpired:
+        r.errors.append("design-check.py timed out (>15s)")
+        return r
+    if proc.returncode != 0:
+        r.errors.append(f"design-check failed: {proc.stderr.strip() or proc.stdout.strip()}")
     return r
 
 
@@ -239,6 +266,7 @@ LEVEL_FUNCS: dict[str, Callable[[Path], Report]] = {
     "L1": audit_l1,
     "L2": audit_l2,
     "L4": audit_l4,
+    "L5": audit_l5,
     "L7": audit_l7,
     "L8": audit_l8,
 }
