@@ -106,33 +106,11 @@
 
 ### Frontend（Nuxt 4 + Nuxt UI + DESIGN.md）
 
-- [ ] **T101** — `app/web/` Nuxi init + 装 nuxt / @nuxt/ui / pinia / @pinia/nuxt
-  - spec：docs/superpowers/specs/2026-08-10-nuxi-init-design.md
-  - AC：`pnpm dev` 起服务，`curl http://127.0.0.1:5173` 返回 200
-- [ ] **T102** — `app/web/app.config.ts` 把 DESIGN.md 导出为 Nuxt UI theme
-  - spec：docs/superpowers/specs/2026-08-10-theme-design.md
-  - AC：色板跟 DESIGN.md 一致；`npx -y @google/design.md lint DESIGN.md` 0 ERROR
-- [ ] **T103** — `app/web/layouts/default.vue` 全局布局（AppBar + SideNav + content）
-  - spec：docs/superpowers/specs/2026-08-10-layout-design.md
-  - AC：vitest snapshot 通过
-- [ ] **T104** — Pinia stores（keywords / recommendations / stars / scan / settings）
-  - spec：docs/superpowers/specs/2026-08-10-pinia-design.md
-  - AC：每个 store 至少 3 个 action，覆盖成功 / 错误 / 加载态
-- [ ] **T105** — `app/web/server/api/keywords.get.ts` + `keywords.post.ts` 等 9 个端点
-  - spec：docs/superpowers/specs/2026-08-10-nitro-api-design.md
-  - AC：每个端点用 curl 实测；vitest mock Python 函数
-- [ ] **T106** — `pages/index.vue` Dashboard（推荐卡片网格）
-  - spec：docs/superpowers/specs/2026-08-10-page-dashboard-design.md
-  - AC：@nuxt/test-utils 渲染成功；playwright e2e 能点详情
-- [ ] **T107** — `pages/keywords.vue` 关键字管理表格
-  - spec：docs/superpowers/specs/2026-08-10-page-keywords-design.md
-  - AC：表格增删改 + 启停全部 vitest 覆盖
-- [ ] **T108** — `pages/recommendations.vue` + `[id].vue` 推荐列表 / 详情
-  - spec：docs/superpowers/specs/2026-08-10-page-recs-design.md
-- [ ] **T109** — `pages/scan.vue` 手动触发 + 历史
-  - spec：docs/superpowers/specs/2026-08-10-page-scan-design.md
-- [ ] **T110** — `pages/stars.vue` + `pages/settings.vue`
-  - spec：docs/superpowers/specs/2026-08-10-page-stars-settings-design.md
+- [x] **T101-T110** — Nuxt 4 骨架 + 6 pages + Nitro API + DESIGN theme → ✅ 66/66 测试, 6 pages HTTP 200
+  - 入口:`cd app/web && pnpm dev` → http://127.0.0.1:5173/
+  - pages: / /keywords /recommendations /scan /stars /settings
+  - API: /api/health /keywords(/[id]) /stars/stats /recommendations /scan
+  - theme: DESIGN.md → app.config.ts + main.css @theme static 注入
 - [ ] **T111** — DESIGN.md → `tailwind.theme.json` 导出脚本 + CI 集成
   - spec：docs/superpowers/specs/2026-08-10-design-export-design.md
   - AC：跑 `pnpm design:lint` 校验 + 导出
