@@ -56,6 +56,7 @@ dev = [
   "freezegun>=1.5",         # 时间 mock（测 daemon）
   "ruff>=0.6",
   "mypy>=1.10",
+  "pyyaml>=6.0",          # CI workflow 验证需要
   "types-PyYAML>=6.0",
 ]
 prod = []

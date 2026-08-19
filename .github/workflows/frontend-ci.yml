@@ -1,0 +1,105 @@
+# frontend-ci.yml — Nuxt 前端 CI (T123)
+#
+# 触发: app/web/** 改动
+# 步骤: pnpm install + test (unit) + build + preview + e2e (Playwright)
+
+name: frontend-ci
+
+on:
+  pull_request:
+    paths:
+      - 'app/web/**'
+      - '.github/workflows/frontend-ci.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: unit + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: app/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: app/web/pnpm-lock.yaml
+
+      - name: Install pnpm
+        run: npm install -g pnpm@11
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Vitest unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  e2e:
+    name: e2e (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: app/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: app/web/pnpm-lock.yaml
+
+      - name: Install pnpm
+        run: npm install -g pnpm@11
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright chromium + deps
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build for preview
+        run: pnpm build
+
+      - name: Start preview server
+        run: |
+          nohup pnpm preview > preview.log 2>&1 &
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+            if curl -sf http://127.0.0.1:3000/api/integration/health >/dev/null 2>&1; then
+              echo "✓ preview ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Run Playwright e2e
+        run: |
+          PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 \
+            PLAYWRIGHT_NO_SERVER=1 \
+            pnpm exec playwright test --reporter=list
+
+      - name: Stop preview server
+        if: always()
+        run: |
+          pkill -f "node.*server.mjs" || true
+          pkill -f "nuxt preview" || true
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: app/web/.playwright-report
+          retention-days: 7

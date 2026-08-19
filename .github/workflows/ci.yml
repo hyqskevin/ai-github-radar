@@ -1,0 +1,22 @@
+# ci.yml — 总入口 (T122)
+#
+# 并行跑 backend-ci + frontend-ci (reusable workflow)
+# 失败时两边独立 fail
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: backend
+    uses: ./.github/workflows/backend-ci.yml
+    with: {}
+  frontend:
+    name: frontend
+    uses: ./.github/workflows/frontend-ci.yml
+    with: {}
