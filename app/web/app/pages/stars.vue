@@ -46,6 +46,54 @@ async function onRefresh() {
   refreshing.value = true
   try { await refresh() } finally { refreshing.value = false }
 }
+
+// 触发后台 init(拉 GitHub stars + 关键字提取)
+const triggering = ref(false)
+const lastJobId = ref<number | null>(null)
+const triggerError = ref<string | null>(null)
+async function triggerInit() {
+  triggering.value = true
+  triggerError.value = null
+  try {
+    const r = await $fetch<{ job_id: number }>('/api/stars/refresh', {
+      method: 'POST',
+      body: { user: '', no_llm: false },
+    })
+    lastJobId.value = r.job_id
+    // 轮询 job 状态
+    pollJobUntilDone(r.job_id)
+  } catch (e: any) {
+    triggerError.value = e?.data?.statusMessage ?? e?.message ?? 'trigger failed'
+  } finally {
+    triggering.value = false
+  }
+}
+
+const pollingJobId = ref<number | null>(null)
+async function pollJobUntilDone(id: number) {
+  pollingJobId.value = id
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 2000))
+    const j = await $fetch<{ jobs: Array<{ id: number; status: string; result: any; error: string }> }>(
+      '/api/jobs'
+    )
+    const job = j.jobs.find(x => x.id === id)
+    if (!job) continue
+    if (job.status === 'success') {
+      // 拉完刷新 stars 数据
+      await refresh()
+      lastJobId.value = null
+      pollingJobId.value = null
+      return
+    }
+    if (job.status === 'failed') {
+      triggerError.value = job.error || 'init failed'
+      pollingJobId.value = null
+      return
+    }
+  }
+  pollingJobId.value = null
+}
 </script>
 
 <template>
@@ -55,10 +103,27 @@ async function onRefresh() {
         <h1 class="text-2xl font-bold tracking-tight">我的 Star</h1>
         <p class="text-sm text-muted">从 GitHub API 拉取的真实数据(本地 SQLite 缓存)</p>
       </div>
-      <UButton icon="i-lucide-refresh-cw" variant="ghost" :loading="refreshing || starsPending2" @click="onRefresh">
-        刷新
-      </UButton>
+      <div class="flex items-center gap-2">
+        <UButton
+          color="primary"
+          icon="i-lucide-download"
+          :loading="triggering || pollingJobId !== null"
+          :disabled="triggering || pollingJobId !== null"
+          @click="triggerInit"
+        >
+          {{ pollingJobId ? `Init #${pollingJobId} 跑中…` : '拉取 Star' }}
+        </UButton>
+        <UButton icon="i-lucide-refresh-cw" variant="ghost" :loading="refreshing || starsPending2" @click="onRefresh">
+          刷新
+        </UButton>
+      </div>
     </header>
+
+    <UAlert v-if="triggerError" color="error" variant="subtle" :title="triggerError" />
+    <UAlert v-if="lastJobId && pollingJobId" color="info" variant="subtle">
+      <template #title>后台任务 #{{ lastJobId }} 跑中…</template>
+      <p class="text-xs text-muted">最长 2 分钟,完成后自动刷新本页数据</p>
+    </UAlert>
 
     <p v-if="statsPending || starsPending2" class="text-sm text-muted">加载中…</p>
 

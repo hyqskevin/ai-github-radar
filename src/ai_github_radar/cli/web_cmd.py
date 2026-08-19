@@ -10,6 +10,13 @@ import click
 @click.option("--port", default=8765, show_default=True, type=int)
 def web_cmd(host: str, port: int) -> None:
     """起本地 Web UI(FastAPI + uvicorn)。"""
+    from ai_github_radar.config import load_settings
     from ai_github_radar.web import run_server
+    # 提前加载 .env,让后续 init/scan job 有 github_token + radar_user
+    try:
+        load_settings()
+        click.echo("✓ config loaded from .env")
+    except Exception as e:  # noqa: BLE001
+        click.echo(f"⚠ .env not loaded ({e}); jobs may need config from /api/settings/all")
     click.echo(f"→ starting web UI at http://{host}:{port} (Ctrl-C to quit)")
     run_server(host=host, port=port)

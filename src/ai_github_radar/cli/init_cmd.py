@@ -41,7 +41,7 @@ def cmd_init(user: str | None, no_llm: bool) -> None:
     with session_scope() as s:
         star_repo = StarRepository(s)
         n_stars = star_repo.upsert_many(star_dicts)
-        docs = [_star_to_doc_dict(d) for d in star_dicts]
+        docs = [star_to_doc_dict(d) for d in star_dicts]
         provider = None if no_llm else detect_provider()
         if provider is None:
             kw_results = extract_keywords_tf_idf(docs, top_n=50, min_df=2)
@@ -59,7 +59,7 @@ def cmd_init(user: str | None, no_llm: bool) -> None:
     click.echo(f"✓ initialized {n_stars} stars, {n_kws} keywords")
 
 
-def _star_to_doc_dict(d: dict) -> str:
+def star_to_doc_dict(d: dict) -> str:
     parts = [d.get("description") or ""]
     topics = d.get("topics")
     if topics:
@@ -71,3 +71,7 @@ def _star_to_doc_dict(d: dict) -> str:
     if lang:
         parts.append(lang)
     return " ".join(parts)
+
+
+# 旧名向后兼容(测试用)
+_star_to_doc_dict = star_to_doc_dict

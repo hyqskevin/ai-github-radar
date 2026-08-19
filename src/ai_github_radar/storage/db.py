@@ -33,10 +33,15 @@ def _coerce_db_url(url: str) -> str:
 
 
 def get_engine(db_url: str = "sqlite:///./data/radar.db") -> Engine:
-    """获取(或创建)Engine 单例。"""
+    """获取(或创建)Engine 单例。
+
+    SQLite 需要 `check_same_thread=False` 才能跨线程(jobs/runner 用 ThreadPoolExecutor)。
+    用 NullPool 避免 SQLite 文件多线程的 database is locked。
+    """
     global _engine
     if _engine is None:
         from sqlalchemy import create_engine
+        from sqlalchemy.pool import NullPool
         url = _coerce_db_url(db_url)
         # sqlite 文件需要父目录
         if url.startswith("sqlite:///"):
@@ -44,7 +49,18 @@ def get_engine(db_url: str = "sqlite:///./data/radar.db") -> Engine:
             if rel and rel != ":memory:":
                 p = Path(rel)
                 p.parent.mkdir(parents=True, exist_ok=True)
-        _engine = create_engine(url, future=True)
+        connect_args = {}
+        poolclass = None
+        if url.startswith("sqlite"):
+            connect_args["check_same_thread"] = False
+            # NullPool:每 session 独立 connection,避免 SQLite file 锁
+            poolclass = NullPool
+        _engine = create_engine(
+            url,
+            future=True,
+            connect_args=connect_args,
+            poolclass=poolclass,
+        )
     return _engine
 
 

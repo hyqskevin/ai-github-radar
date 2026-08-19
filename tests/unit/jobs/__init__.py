@@ -1,1 +1,1 @@
-"""Unit tests for ai_github_radar.jobs."""
+"""tests/unit/jobs/__init__.py."""

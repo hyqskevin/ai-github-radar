@@ -109,14 +109,48 @@ describe('T128 page: scheduler', () => {
 })
 
 describe('T125 layout nav', () => {
-  it('has 7 nav items (Tasks/Scheduler added)', async () => {
+  it('has 8 nav items (Tasks/Scheduler/init added)', async () => {
     const src = readFileSync(
       resolve(__dirname, '../../app/layouts/default.vue'),
       'utf-8'
     )
-    for (const label of ['推荐', '推荐列表', '我的 Star', '关键字', '任务监控', '定时任务', '设置']) {
+    for (const label of ['推荐', '推荐列表', '我的 Star', '关键字', '初始化', '任务监控', '定时任务', '设置']) {
       expect(src).toContain(label)
     }
+  })
+})
+
+
+describe('T129 page: init (one-shot setup)', () => {
+  it('renders form with github_user + github_token + no_llm toggle', () => {
+    const src = pageSource('init.vue')
+    expect(src).toContain('初始化')
+    expect(src).toContain('GitHub username')
+    expect(src).toContain('Personal Access Token')
+    expect(src).toContain('noLlm')
+  })
+  it('triggers /api/stars/refresh on save', () => {
+    const src = pageSource('init.vue')
+    expect(src).toContain('/api/stars/refresh')
+    expect(src).toContain('/api/settings/all')
+    expect(src).toContain('pollJob')
+  })
+})
+
+
+describe('T129 page: stars has pull button', () => {
+  it('stars.vue has /api/stars/refresh trigger button', () => {
+    const src = pageSource('stars.vue')
+    expect(src).toContain('/api/stars/refresh')
+    expect(src).toContain('拉取 Star')
+  })
+})
+
+describe('T129 page: recommendations has scan button', () => {
+  it('recommendations.vue has /api/scan/async trigger', () => {
+    const src = pageSource('recommendations.vue')
+    expect(src).toContain('/api/scan/async')
+    expect(src).toContain('手动 Scan')
   })
 })
 

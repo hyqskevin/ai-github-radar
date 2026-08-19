@@ -410,6 +410,8 @@ def api_get_all_settings() -> dict:
     """列所有 settings(key-value,API key 隐藏)。"""
     from ai_github_radar.storage.db import init_db, session_scope
     from ai_github_radar.services.settings import (
+        KEY_GITHUB_TOKEN,
+        KEY_GITHUB_USER,
         KEY_LLM_API_KEY,
         KEY_LLM_MODEL,
         KEY_LLM_PROVIDER,
@@ -422,7 +424,28 @@ def api_get_all_settings() -> dict:
         out["llm_provider"] = get_setting(s, KEY_LLM_PROVIDER, "none")
         out["llm_model"] = get_setting(s, KEY_LLM_MODEL, "")
         out["llm_api_key_set"] = bool(get_setting(s, KEY_LLM_API_KEY, ""))
+        out["github_user"] = get_setting(s, KEY_GITHUB_USER, "")
+        out["github_token_set"] = bool(get_setting(s, KEY_GITHUB_TOKEN, ""))
     return out
+
+
+@api_router.post("/settings/all")
+def api_set_all_settings(body: dict) -> dict:
+    """写设置(单字段或全字段都行)。"""
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.services.settings import (
+        KEY_GITHUB_TOKEN,
+        KEY_GITHUB_USER,
+        set_setting,
+    )
+
+    init_db()
+    with session_scope() as s:
+        if "github_user" in body and body["github_user"] is not None:
+            set_setting(s, KEY_GITHUB_USER, body["github_user"])
+        if "github_token" in body and body["github_token"]:
+            set_setting(s, KEY_GITHUB_TOKEN, body["github_token"])
+    return api_get_all_settings()
 
 
 @api_router.get("/health")
@@ -481,6 +504,66 @@ def api_clear_jobs(body: Optional[dict] = None) -> dict:
     with session_scope() as s:
         deleted = s.query(Job).delete()
     return {"deleted": deleted}
+
+
+@api_router.post("/stars/refresh")
+def api_refresh_stars(body: Optional[dict] = None) -> dict:
+    """后台触发 init(拉 GitHub stars + 提取关键字)。
+
+    body: {user?: str, no_llm?: bool}
+    返回: {job_id, status_url} —前端轮询 /api/jobs 查 status。
+    """
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.jobs.runner import run_init, submit_task
+
+    body = body or {}
+    user = body.get("user") or ""
+
+    init_db()
+    with session_scope() as s:
+        _, job_id = submit_task(
+            "init",
+            s,
+            run_init,
+            user=user,
+            no_llm=body.get("no_llm", False),
+        )
+    return {
+        "job_id": job_id,
+        "status": "running",
+        "poll_url": f"/api/jobs",
+    }
+
+
+@api_router.post("/scan/async")
+def api_scan_async(body: Optional[dict] = None) -> dict:
+    """后台触发 scan(拉 trending + 匹配 + 写 recommendations)。
+
+    body: {top?: int=10, language?: str, since?: str='daily'}
+    """
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.jobs.runner import run_scan, submit_task
+
+    body = body or {}
+    top = int(body.get("top", 10))
+    language = body.get("language") or None
+    since = body.get("since", "daily")
+
+    init_db()
+    with session_scope() as s:
+        _, job_id = submit_task(
+            "scan",
+            s,
+            run_scan,
+            top=top,
+            language=language,
+            since=since,
+        )
+    return {
+        "job_id": job_id,
+        "status": "running",
+        "poll_url": f"/api/jobs",
+    }
 
 
 @api_router.get("/schedules")
