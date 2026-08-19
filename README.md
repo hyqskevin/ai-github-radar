@@ -76,8 +76,9 @@ uv run python -m ai_github_radar.cli keyword del python
 
 ## 当前已实现功能
 
-阶段一 ✅(15/15 后端 TODO):
+### 阶段一 ✅ 后端 + 前端联调
 
+#### 后端(v0.1.0)
 - [x] **项目骨架** — Python 3.12 + .venv + pyproject + 8 步 loop
 - [x] **SPEC + 13 维度设计文档** — SPEC.md / DESIGN.md / 8 份 docs/
 - [x] **DB 层**(T001-T003) — 4 张表(stars / keywords / trending_snapshots / recommendations),SQLAlchemy ORM + session 管理
@@ -92,14 +93,25 @@ uv run python -m ai_github_radar.cli keyword del python
 - [x] **Web UI**(T013) — FastAPI 本地 UI,渲染推荐 / 关键字表 + REST API CRUD
 - [x] **存储层**(T014) — `session_scope` + 3 个 Repository
 - [x] **周期调度**(T015) — in-process `run_forever` + `run_once`,stop_event 优雅退出
-- [x] **测试 + audit**(T016) — 237 单元测试,**89% 覆盖率**,`audit-loop --strict` 0 ERROR / 0 WARN
+- [x] **测试 + audit**(T016) — 241 单元测试,**89% 覆盖率**,`audit-loop --strict` 0 ERROR / 0 WARN
 
-下一阶段(阶段二):
+#### 前端(v0.2.0)
+- [x] **Nuxt 4 骨架**(T101) — `pnpm dev` 起服务,HTTP 200
+- [x] **DESIGN theme**(T102) — `app.config.ts` + `main.css` @theme static 注入 7 色
+- [x] **Layout**(T103) — AppBar + SideNav (`UNavigationMenu` 6 items) + Content
+- [x] **6 pages**(T106-T110) — Dashboard / Keywords / Recommendations / Scan / Stars / Settings
+- [x] **Nitro API**(T105) — `/api/{health, keywords, stars, recommendations, scan}` (mock fallback)
 
-- [ ] **macOS launchd / Linux systemd** 周期调度脚本
-- [ ] **LLM 摘要缓存**(同 stars 输入复用)
-- [ ] **Docker 镜像**
-- [ ] **多用户隔离**
+#### 集成层(v0.3.0)
+- [x] **Nitro ↔ Python 联调**(T112) — `server/utils/python.ts` + `/api/integration/health`,timeout 2s + mock fallback
+- [x] **DESIGN ↔ main.css 交叉验证**(T111) — `scripts/design-check.py` + audit L5
+- [x] **Playwright e2e**(T113) — 7 测试覆盖 6 pages + 2 API,真 Chromium 跑
+
+### 下一阶段(阶段二)
+- [ ] macOS launchd / Linux systemd 周期调度脚本
+- [ ] LLM 摘要缓存(同 stars 输入复用)
+- [ ] 多用户隔离
+- [ ] 嵌入相似度(替代 TF-IDF 关键字精确匹配)
 
 ## 设计文档(13 维度)
 
@@ -154,8 +166,32 @@ multipart/alternative(HTML + text fallback),内联 CSS,HTML 转义防 XSS。
 自查:
 
 ```bash
-python3 scripts/audit-loop.py --strict
+# 后端
+python3 scripts/audit-loop.py
 PYTHONPATH=src .venv/bin/python -m pytest tests/unit --cov=ai_github_radar
+
+# 前端 unit
+cd app/web && pnpm test
+
+# 前端 e2e (需要 dev server 跑着)
+cd app/web && pnpm test:e2e
+
+# DESIGN token 一致性(L5)
+python3 scripts/design-check.py
+```
+
+### 端到端联调(同时跑两个服务)
+
+```bash
+# 终端 1: Python 后端
+python -m ai_github_radar.cli web --port 8765
+
+# 终端 2: Nuxt 前端 (指向真后端)
+cd app/web && PYTHON_BACKEND_URL=http://127.0.0.1:8765 pnpm dev
+
+# 验证联调
+curl http://127.0.0.1:5173/api/integration/health
+# {"python_reachable": true, "python_status": 200, ...}
 ```
 
 ## License
