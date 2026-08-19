@@ -1,14 +1,27 @@
 <script setup lang="ts">
-// pages/recommendations.vue — 推荐列表
-// SPEC: docs/superpowers/specs/2026-08-10-page-recs-design.md
+// pages/recommendations.vue — 推荐列表(真后端 /api/recommendations)
 
 useHead({ title: '推荐列表 · ai-github-radar' })
 
-const { data, pending, error, refresh } = await useFetch('/api/recommendations', {
-  default: () => ({ recommendations: [] })
-})
+interface Recommendation {
+  id: number
+  repo_id: number
+  score: number
+  matched_keywords: string[]
+  channel: string
+  pushed_at: string
+}
+
+const { data, pending, error, refresh } = await useFetch<{ recommendations: Recommendation[] }>(
+  '/api/recommendations',
+  { default: () => ({ recommendations: [] }) }
+)
 
 const recs = computed(() => data.value?.recommendations ?? [])
+
+function fmtTime(s: string) {
+  return s.replace('T', ' ').slice(0, 19)
+}
 </script>
 
 <template>
@@ -26,8 +39,10 @@ const recs = computed(() => data.value?.recommendations ?? [])
     <UCard v-else-if="recs.length === 0">
       <div class="text-center py-12 space-y-3">
         <UIcon name="i-lucide-inbox" class="size-12 mx-auto text-dimmed" />
-        <p class="text-sm text-muted">还没有推荐</p>
-        <p class="text-xs text-dimmed">先去 <NuxtLink to="/scan" class="text-tertiary-400">扫描</NuxtLink></p>
+        <p class="text-sm text-muted">还没有推荐记录</p>
+        <p class="text-xs text-dimmed">
+          配置 <NuxtLink to="/scheduler" class="text-tertiary-400">定时任务</NuxtLink> 跑 scan 后会出现
+        </p>
       </div>
     </UCard>
     <div v-else class="space-y-3">
@@ -47,7 +62,7 @@ const recs = computed(() => data.value?.recommendations ?? [])
                 {{ kw }}
               </span>
             </div>
-            <p class="text-xs text-dimmed font-mono">{{ r.pushed_at }}</p>
+            <p class="text-xs text-dimmed font-mono">{{ fmtTime(r.pushed_at) }}</p>
           </div>
           <div class="text-right shrink-0">
             <p class="text-2xl font-semibold tabular-nums text-tertiary-400">

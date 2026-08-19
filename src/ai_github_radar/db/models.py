@@ -1,7 +1,12 @@
-"""ORM 模型定义 — T003.
+"""ORM 模型定义 — T003 + T125.
 
-4 张表(stars / keywords / trending_snapshots / recommendations),
-字段按 docs/database-design.md DDL 一一对应。
+7 张表(stars / keywords / trending_snapshots / recommendations /
+settings / jobs / schedules),字段按 docs/database-design.md DDL 一一对应。
+
+阶段二新增:
+- settings: key-value 配置(LLM provider / API key / cron interval)
+- jobs: 任务执行记录(任务监控)
+- schedules: 定时任务表(cron)
 """
 
 from __future__ import annotations
@@ -47,23 +52,39 @@ class Star(Base):
 
 
 class Keyword(Base):
-    """关键字订阅表。TF-IDF 自动提的或用户手加。"""
+    """关键字。
+
+    - term: 唯一
+    - weight: 默认 1.0
+    - source: auto (LLM 提取) / manual (用户加)
+    - enabled: 启/停
+    """
 
     __tablename__ = "keywords"
+    __table_args__ = (
+        UniqueConstraint("term", name="uq_keyword_term"),
+        Index("idx_keyword_enabled", "enabled"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    term: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    term: Mapped[str] = mapped_column(Text, nullable=False)
     weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
-    source: Mapped[str] = mapped_column(String(16), nullable=False, default="manual")  # "auto" | "manual"
-    enabled: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=True, index=True
+    source: Mapped[str] = mapped_column(String(16), nullable=False, default="manual")
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[str] = mapped_column(
+        Text, nullable=False, default=_utcnow_iso
     )
-    created_at: Mapped[str] = mapped_column(Text, nullable=False, default=_utcnow_iso)
-    updated_at: Mapped[str] = mapped_column(Text, nullable=False, default=_utcnow_iso)
+    updated_at: Mapped[str] = mapped_column(
+        Text, nullable=False, default=_utcnow_iso, onupdate=_utcnow_iso
+    )
 
 
 class TrendingSnapshot(Base):
-    """trending 每日快照。"""
+    """每日 trending 快照。
+
+    - fetched_at: 拉取时间
+    - repos: JSON list,TrendingRepo dict 序列化
+    """
 
     __tablename__ = "trending_snapshots"
     __table_args__ = (
@@ -97,3 +118,64 @@ class Recommendation(Base):
     matched_keywords: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     channel: Mapped[str] = mapped_column(String(16), nullable=False)
     pushed_at: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class Setting(Base):
+    """应用设置表(key-value)。
+
+    阶段二:LLM provider / API key / scan interval / push target 等。
+    """
+
+    __tablename__ = "settings"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[str] = mapped_column(Text, nullable=False, default=_utcnow_iso)
+
+
+class Job(Base):
+    """任务执行记录(任务监控)。
+
+    字段:
+    - name: scan / init / 任何内部任务
+    - status: pending / running / success / failed
+    - started_at / finished_at / duration_ms
+    - payload: JSON,任务输入参数
+    - result: JSON,任务结果摘要
+    - error: 错误堆栈
+    """
+
+    __tablename__ = "jobs"
+    __table_args__ = (Index("idx_job_started", "started_at"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    started_at: Mapped[str] = mapped_column(Text, nullable=False, default=_utcnow_iso)
+    finished_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    duration_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    payload: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    result: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class Schedule(Base):
+    """定时任务配置。
+
+    - name: scan_keywords / refresh_stars / 等
+    - cron: 标准 5 段 cron 表达式
+    - enabled: True/False
+    - last_run_at: 上次跑的时间
+    - next_run_at: 估算下次时间
+    """
+
+    __tablename__ = "schedules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    cron: Mapped[str] = mapped_column(String(64), nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    payload: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    last_run_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    next_run_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[str] = mapped_column(Text, nullable=False, default=_utcnow_iso)

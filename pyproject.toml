@@ -58,6 +58,7 @@ dev = [
   "mypy>=1.10",
   "pyyaml>=6.0",          # CI workflow 验证需要
   "types-PyYAML>=6.0",
+  "croniter>=6.0",        # cron 表达式解析 + next_run_at 估算
 ]
 prod = []
 

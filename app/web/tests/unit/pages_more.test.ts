@@ -11,17 +11,19 @@ function pageSource(filename: string): string {
   )
 }
 
-describe('T106 page: index (Dashboard)', () => {
-  it('contains Dashboard header + scan button label', () => {
+describe('T125 page: index (Dashboard)', () => {
+  it('contains Dashboard header + 4 API fetches', () => {
     const src = pageSource('index.vue')
     expect(src).toContain('Dashboard')
-    expect(src).toContain('立即扫描')
+    expect(src).toContain('/api/stars/stats')
+    expect(src).toContain('/api/recommendations')
+    expect(src).toContain('/api/keywords')
+    expect(src).toContain('/api/jobs')
   })
 
-  it('uses mockRecommendations as fallback (阶段一)', () => {
+  it('uses real backend (no mockRecommendations fallback)', () => {
     const src = pageSource('index.vue')
-    expect(src).toContain('useKeywordsStore')
-    expect(src).toContain('mockRecommendations')
+    expect(src).not.toContain('mockRecommendations')
   })
 })
 
@@ -50,18 +52,11 @@ describe('T108 page: recommendations', () => {
   })
 })
 
-describe('T109 page: scan', () => {
-  it('contains 手动扫描 + triggerScan function', () => {
-    const src = pageSource('scan.vue')
-    expect(src).toContain('手动扫描')
-    expect(src).toContain('triggerScan')
-    expect(src).toContain('开始扫描')
-  })
-
-  it('POSTs /api/scan with push target', () => {
-    const src = pageSource('scan.vue')
-    expect(src).toContain('/api/scan')
-    expect(src).toContain('push')
+describe('T125 page: scan removed', () => {
+  // T125: /scan 页合并到 /tasks + /scheduler
+  it('scan.vue file no longer exists', () => {
+    const path = resolve(__dirname, '../../app/pages/scan.vue')
+    expect(() => pageSource('scan.vue')).toThrow()  // readFileSync throws
   })
 })
 
@@ -75,14 +70,53 @@ describe('T110 page: stars', () => {
   })
 })
 
-describe('T110 page: settings', () => {
-  it('renders 设置 + GitHub / 推送 / LLM sections', () => {
+describe('T125 page: settings', () => {
+  it('renders 设置 + GitHub / LLM sections', async () => {
     const src = pageSource('settings.vue')
     expect(src).toContain('设置')
     expect(src).toContain('GitHub')
-    expect(src).toContain('推送')
     expect(src).toContain('LLM')
     expect(src).toContain('OpenAI')
+  })
+  it('no longer has 推送 UI', async () => {
+    const src = pageSource('settings.vue')
+    expect(src).not.toContain('飞书')
+    expect(src).not.toContain('SMTP')
+  })
+})
+
+describe('T127 page: tasks (job monitor)', () => {
+  it('renders 任务监控 + uses /api/jobs', async () => {
+    const src = pageSource('tasks.vue')
+    expect(src).toContain('任务监控')
+    expect(src).toContain('/api/jobs')
+    expect(src).toContain('自动 10s 刷新')
+  })
+})
+
+describe('T128 page: scheduler', () => {
+  it('renders 定时任务 + cron form', async () => {
+    const src = pageSource('scheduler.vue')
+    expect(src).toContain('定时任务')
+    expect(src).toContain('/api/schedules')
+    expect(src).toContain('cron')
+  })
+  it('has cron presets', async () => {
+    const src = pageSource('scheduler.vue')
+    expect(src).toContain('0 9 * * *')
+    expect(src).toContain('presets')
+  })
+})
+
+describe('T125 layout nav', () => {
+  it('has 7 nav items (Tasks/Scheduler added)', async () => {
+    const src = readFileSync(
+      resolve(__dirname, '../../app/layouts/default.vue'),
+      'utf-8'
+    )
+    for (const label of ['推荐', '推荐列表', '我的 Star', '关键字', '任务监控', '定时任务', '设置']) {
+      expect(src).toContain(label)
+    }
   })
 })
 
@@ -96,12 +130,12 @@ describe('T103 layout', () => {
     expect(src).not.toContain('UVerticalNavigation')
   })
 
-  it('declares all 6 nav items', () => {
+  it('declares all 7 nav items (T125)', () => {
     const src = readFileSync(
       resolve(__dirname, '../../app/layouts/default.vue'),
       'utf-8'
     )
-    for (const label of ['推荐', '推荐列表', '关键字', '我的 Star', '扫描', '设置']) {
+    for (const label of ['推荐', '推荐列表', '我的 Star', '关键字', '任务监控', '定时任务', '设置']) {
       expect(src).toContain(label)
     }
   })

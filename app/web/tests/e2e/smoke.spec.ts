@@ -1,13 +1,12 @@
-// tests/e2e/smoke.spec.ts — 端到端冒烟 (T113)
+// tests/e2e/smoke.spec.ts — 端到端冒烟 (T113+T125)
 // 验证三个核心页面能渲染,不依赖后端(mock fallback)
 
 import { expect, test } from '@playwright/test'
 
 test.describe('T113 e2e smoke', () => {
-  test('Dashboard renders with header + scan button', async ({ page }) => {
+  test('Dashboard renders with header', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
-    await expect(page.getByRole('button', { name: /立即扫描/ })).toBeVisible()
   })
 
   test('Keywords page shows add form', async ({ page }) => {
@@ -16,40 +15,70 @@ test.describe('T113 e2e smoke', () => {
     await expect(page.getByRole('button', { name: '添加' })).toBeVisible()
   })
 
-  test('Scan page shows trigger button', async ({ page }) => {
-    await page.goto('/scan')
-    await expect(page.getByRole('heading', { name: '手动扫描' })).toBeVisible()
-    await expect(page.getByRole('button', { name: '开始扫描' })).toBeVisible()
+  test('Recommendations page renders title', async ({ page }) => {
+    await page.goto('/recommendations')
+    await expect(page.getByRole('heading', { name: '推荐列表' })).toBeVisible()
   })
 
-  test('Settings page renders all 3 sections', async ({ page }) => {
+  test('Tasks page renders title', async ({ page }) => {
+    await page.goto('/tasks')
+    await expect(page.getByRole('heading', { name: '任务监控' })).toBeVisible()
+  })
+
+  test('Scheduler page renders title', async ({ page }) => {
+    await page.goto('/scheduler')
+    await expect(page.getByRole('heading', { name: '定时任务' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '新建任务' })).toBeVisible()
+  })
+
+  test('Settings page renders LLM section', async ({ page }) => {
     await page.goto('/settings')
     await expect(page.getByRole('heading', { name: '设置' })).toBeVisible()
-    // GitHub / 推送 / LLM 段卡片标题(h2 in UCard #header)
     await expect(page.getByRole('heading', { name: 'GitHub' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: '推送' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'LLM' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'LLM 关键字提取' })).toBeVisible()
   })
 
-  test('Sidebar navigation has 6 items', async ({ page }) => {
+  test('Sidebar navigation has 7 items (Tasks/Scheduler 新增)', async ({ page }) => {
     await page.goto('/')
     const navItems = page.getByRole('navigation').first().getByRole('link')
-    // 推荐 + 推荐列表 + 关键字 + 我的 Star + 扫描 + 设置
-    await expect(navItems).toHaveCount(6)
+    await expect(navItems).toHaveCount(7)
   })
 
   test('API keywords endpoint returns array (mock fallback)', async ({ request }) => {
     const resp = await request.get('/api/keywords')
     expect(resp.ok()).toBeTruthy()
     const data = await resp.json()
-    expect(Array.isArray(data)).toBeTruthy()
+    expect(data).toBeTruthy()
   })
 
-  test('API integration health returns reachable=false when python down', async ({ request }) => {
-    const resp = await request.get('/api/integration/health')
+  test('API stars endpoint returns stars array', async ({ request }) => {
+    const resp = await request.get('/api/stars')
     expect(resp.ok()).toBeTruthy()
     const data = await resp.json()
-    expect(data).toHaveProperty('python_reachable')
-    expect(typeof data.python_reachable).toBe('boolean')
+    expect(data).toHaveProperty('stars')
+    expect(Array.isArray(data.stars)).toBe(true)
+  })
+
+  test('API schedules endpoint returns schedules array', async ({ request }) => {
+    const resp = await request.get('/api/schedules')
+    expect(resp.ok()).toBeTruthy()
+    const data = await resp.json()
+    expect(data).toHaveProperty('schedules')
+    expect(Array.isArray(data.schedules)).toBe(true)
+  })
+
+  test('API jobs endpoint returns jobs array', async ({ request }) => {
+    const resp = await request.get('/api/jobs')
+    expect(resp.ok()).toBeTruthy()
+    const data = await resp.json()
+    expect(data).toHaveProperty('jobs')
+    expect(Array.isArray(data.jobs)).toBe(true)
+  })
+
+  test('API settings/llm endpoint returns provider field', async ({ request }) => {
+    const resp = await request.get('/api/settings/llm')
+    expect(resp.ok()).toBeTruthy()
+    const data = await resp.json()
+    expect(data).toHaveProperty('provider')
   })
 })

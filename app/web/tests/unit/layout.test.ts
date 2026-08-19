@@ -69,10 +69,10 @@ describe('T103 layouts/default.vue', () => {
   })
 
   // C7: navItems 字段
-  it('edge (C7): navItems covers all 6 main pages', () => {
+  it('edge (C7): navItems covers all 7 main pages (T125 加 tasks/scheduler)', () => {
     const items = extractNavItems(readLayout())
     const tos = items.map(i => i.to)
-    for (const expected of ['/', '/recommendations', '/keywords', '/stars', '/scan', '/settings']) {
+    for (const expected of ['/', '/recommendations', '/stars', '/keywords', '/tasks', '/scheduler', '/settings']) {
       expect(tos, `navItems must include ${expected}`).toContain(expected)
     }
   })

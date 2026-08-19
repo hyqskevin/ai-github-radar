@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -288,3 +288,287 @@ def api_trigger_scan(body: ScanRequest = ScanRequest()) -> dict:
         already_recommended_ids=dedupe, top_n=body.top,
     )
     return {"recommendations": recs}
+
+
+def _star_to_dict(s: Any) -> dict:
+    return {
+        "id": s.id,
+        "repo_id": s.repo_id,
+        "owner": s.owner,
+        "name": s.name,
+        "description": s.description,
+        "language": s.language,
+        "topics": (s.topics or "").split(",") if getattr(s, "topics", None) else [],
+        "starred_at": getattr(s, "starred_at", None).isoformat() if getattr(s, "starred_at", None) else None,
+    }
+
+
+@api_router.get("/stars")
+def api_list_stars(limit: int = 200, offset: int = 0) -> dict:
+    """列我 star 的仓库(从 SQLite `stars` 表读)。"""
+    from sqlalchemy import select
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.db.models import Star
+
+    init_db()
+    with session_scope() as s:
+        stmt = (
+            select(Star)
+            .order_by(Star.starred_at.desc().nullslast(), Star.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        stars = list(s.execute(stmt).scalars())
+    return {"stars": [_star_to_dict(x) for x in stars], "limit": limit, "offset": offset}
+
+
+@api_router.get("/stars/stats")
+def api_stars_stats() -> dict:
+    """聚合:总 star 数 + 语言分布 + top topics。"""
+    from collections import Counter
+    from sqlalchemy import func, select
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.db.models import Star
+
+    init_db()
+    with session_scope() as s:
+        total = s.execute(select(func.count(Star.id))).scalar() or 0
+        rows = s.execute(
+            select(Star.language, Star.topics).where(Star.id.isnot(None))
+        ).all()
+    lang_counter: Counter[str] = Counter()
+    topic_counter: Counter[str] = Counter()
+    for lang, topics_csv in rows:
+        if lang:
+            lang_counter[lang] += 1
+        if topics_csv:
+            for t in topics_csv.split(","):
+                t = t.strip()
+                if t:
+                    topic_counter[t] += 1
+    by_language = dict(lang_counter.most_common(15))
+    top_topics = [
+        {"name": name, "count": cnt}
+        for name, cnt in topic_counter.most_common(10)
+    ]
+    return {
+        "total": total,
+        "by_language": by_language,
+        "top_topics": top_topics,
+    }
+
+
+@api_router.get("/settings/llm")
+def api_get_llm_settings() -> dict:
+    """读 LLM 设置(provider + model + 是否启用 + API key 是否已设置)。"""
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.services.settings import (
+        KEY_LLM_API_KEY,
+        KEY_LLM_MODEL,
+        KEY_LLM_PROVIDER,
+        get_setting,
+    )
+
+    init_db()
+    with session_scope() as s:
+        provider = get_setting(s, KEY_LLM_PROVIDER, "none") or "none"
+        model = get_setting(s, KEY_LLM_MODEL, "") or ""
+        api_key = get_setting(s, KEY_LLM_API_KEY, "")
+    return {
+        "provider": provider,
+        "model": model,
+        "api_key_set": bool(api_key),
+        "enabled": provider not in ("none", ""),
+    }
+
+
+@api_router.post("/settings/llm")
+def api_set_llm_settings(body: dict) -> dict:
+    """持久化 LLM 设置。"""
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.services.settings import (
+        KEY_LLM_API_KEY,
+        KEY_LLM_MODEL,
+        KEY_LLM_PROVIDER,
+        set_setting,
+    )
+
+    init_db()
+    with session_scope() as s:
+        if body.get("provider") is not None:
+            set_setting(s, KEY_LLM_PROVIDER, body["provider"])
+        if body.get("model") is not None:
+            set_setting(s, KEY_LLM_MODEL, body["model"])
+        if body.get("api_key") is not None:
+            # API key 简单存文本(阶段二加 encrypt)
+            set_setting(s, KEY_LLM_API_KEY, body["api_key"])
+    return api_get_llm_settings()
+
+
+@api_router.get("/settings/all")
+def api_get_all_settings() -> dict:
+    """列所有 settings(key-value,API key 隐藏)。"""
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.services.settings import (
+        KEY_LLM_API_KEY,
+        KEY_LLM_MODEL,
+        KEY_LLM_PROVIDER,
+        get_setting,
+    )
+
+    init_db()
+    out = {}
+    with session_scope() as s:
+        out["llm_provider"] = get_setting(s, KEY_LLM_PROVIDER, "none")
+        out["llm_model"] = get_setting(s, KEY_LLM_MODEL, "")
+        out["llm_api_key_set"] = bool(get_setting(s, KEY_LLM_API_KEY, ""))
+    return out
+
+
+@api_router.get("/health")
+def api_health() -> dict:
+    """健康检查端点。"""
+    return {"status": "ok"}
+
+
+@api_router.get("/llm/summary")
+def api_llm_summary_get() -> dict:
+    """LLM summary 占位 — 阶段二接入真实 LLM 调用。"""
+    import os
+
+    provider = os.environ.get("LLM_PROVIDER", "none")
+    return {
+        "provider": provider,
+        "model": os.environ.get("LLM_MODEL", ""),
+        "enabled": provider != "none",
+        "summary": None,
+        "note": "阶段一:LLM summary 占位,阶段二接入真实调用",
+    }
+
+
+@api_router.post("/llm/summary")
+def api_llm_summary_post(body: dict) -> dict:
+    """触发 LLM 生成摘要占位(阶段一不真调用)。"""
+    repo_id = body.get("repo_id", "")
+    return {
+        "repo_id": repo_id,
+        "summary": None,
+        "provider": "none",
+        "saved": False,
+        "note": "阶段一:LLM summary 占位,阶段二接入真实调用",
+    }
+
+
+@api_router.get("/jobs")
+def api_list_jobs(limit: int = 50) -> dict:
+    """列最近任务执行记录(任务监控)。"""
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.services.jobs import job_to_dict, recent_jobs
+
+    init_db()
+    with session_scope() as s:
+        jobs = recent_jobs(s, limit=limit)
+    return {"jobs": [job_to_dict(j) for j in jobs], "limit": limit}
+
+
+@api_router.post("/jobs/clear")
+def api_clear_jobs(body: Optional[dict] = None) -> dict:
+    """清空任务记录(可选)。"""
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.db.models import Job
+
+    init_db()
+    with session_scope() as s:
+        deleted = s.query(Job).delete()
+    return {"deleted": deleted}
+
+
+@api_router.get("/schedules")
+def api_list_schedules() -> dict:
+    """列定时任务 + 计算 next_run_at。"""
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.services.schedules import list_schedules, schedule_to_dict
+    from croniter import croniter
+
+    init_db()
+    with session_scope() as s:
+        scheds = list_schedules(s)
+    out = []
+    for sc in scheds:
+        d = schedule_to_dict(sc)
+        if sc.enabled and sc.cron:
+            try:
+                nxt = croniter(sc.cron, datetime.now(timezone.utc))
+                d["next_run_at"] = nxt.get_next(datetime).isoformat()
+            except Exception:  # noqa: BLE001
+                d["next_run_at"] = None
+        out.append(d)
+    return {"schedules": out}
+
+
+@api_router.post("/schedules")
+def api_create_schedule(body: dict) -> dict:
+    """新增定时任务。body: {name, cron, enabled?, payload?}"""
+    from croniter import croniter
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.services.schedules import create_schedule, schedule_to_dict
+
+    name = body.get("name", "").strip()
+    cron = body.get("cron", "").strip()
+    if not name or not cron:
+        raise HTTPException(status_code=400, detail="name + cron required")
+    try:
+        croniter(cron)  # 校验合法
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail=f"invalid cron: {e}")
+    init_db()
+    with session_scope() as s:
+        sc = create_schedule(
+            s,
+            name=name,
+            cron=cron,
+            enabled=body.get("enabled", True),
+            payload=body.get("payload"),
+        )
+    return schedule_to_dict(sc)
+
+
+@api_router.patch("/schedules/{schedule_id}")
+def api_update_schedule(schedule_id: int, body: dict) -> dict:
+    """更新定时任务(cron / enabled / payload)。"""
+    from croniter import croniter
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.services.schedules import schedule_to_dict, update_schedule
+
+    cron = body.get("cron")
+    if cron is not None:
+        try:
+            croniter(cron)
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(status_code=400, detail=f"invalid cron: {e}")
+    init_db()
+    with session_scope() as s:
+        sc = update_schedule(
+            s,
+            schedule_id,
+            cron=cron,
+            enabled=body.get("enabled"),
+            payload=body.get("payload"),
+        )
+    if sc is None:
+        raise HTTPException(status_code=404, detail="schedule not found")
+    return schedule_to_dict(sc)
+
+
+@api_router.delete("/schedules/{schedule_id}")
+def api_delete_schedule(schedule_id: int) -> dict:
+    """删除定时任务。"""
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.services.schedules import delete_schedule
+
+    init_db()
+    with session_scope() as s:
+        ok = delete_schedule(s, schedule_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="schedule not found")
+    return {"deleted": schedule_id}

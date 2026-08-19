@@ -65,11 +65,11 @@ async function handleDelete(id: number) {
         v-else
         :data="store.items"
         :columns="[
-          { key: 'term', label: '关键字' },
-          { key: 'weight', label: '权重' },
-          { key: 'source', label: '来源' },
-          { key: 'enabled', label: '状态' },
-          { key: 'actions', label: '操作' }
+          { id: 'term', header: '关键字' },
+          { id: 'weight', header: '权重' },
+          { id: 'source', header: '来源' },
+          { id: 'enabled', header: '状态' },
+          { id: 'actions', header: '操作' }
         ]"
       >
         <template #term-cell="{ row }">

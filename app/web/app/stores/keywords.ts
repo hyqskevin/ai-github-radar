@@ -56,8 +56,9 @@ export const useKeywordsStore = defineStore('keywords', {
       this.error = null
       try {
         const f = $nuxtFetch()
-        const data = await f<Keyword[]>('/api/keywords')
-        this.items = data
+        const raw = await f<Keyword[] | { keywords: Keyword[] }>('/api/keywords')
+        // 后端 / Python 返的 schema 可能两种: list 或 {keywords: list}
+        this.items = Array.isArray(raw) ? raw : (raw.keywords ?? [])
       } catch (err) {
         const e = err as FetchError
         if (e.statusCode === 404 || e.statusCode === undefined) {
@@ -90,9 +91,9 @@ export const useKeywordsStore = defineStore('keywords', {
       const idx = this.items.findIndex(k => k.id === id)
       if (idx === -1) throw new Error(`keyword id=${id} not found`)
       const f = $nuxtFetch()
-      const updated = await f<Keyword>(`/api/keywords/${id}`, {
-        method: 'PATCH',
-        body: patch
+      // 后端 toggle 用 POST /api/keywords/{term}/toggle,不用 PATCH id
+      const updated = await f<Keyword>(`/api/keywords/${encodeURIComponent(this.items[idx].term)}/toggle`, {
+        method: 'POST'
       })
       this.items[idx] = updated
       return updated
@@ -107,8 +108,9 @@ export const useKeywordsStore = defineStore('keywords', {
     async remove(id: number): Promise<void> {
       const idx = this.items.findIndex(k => k.id === id)
       if (idx === -1) throw new Error(`keyword id=${id} not found`)
+      const term = this.items[idx].term
       const f = $nuxtFetch()
-      await f(`/api/keywords/${id}`, { method: 'DELETE' })
+      await f(`/api/keywords/${encodeURIComponent(term)}`, { method: 'DELETE' })
       this.items.splice(idx, 1)
     },
 
