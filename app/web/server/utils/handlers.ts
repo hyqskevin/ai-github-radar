@@ -162,11 +162,34 @@ export function runScan(opts: { dryRun?: boolean } = {}): { status: string; matc
 // Stars stats (mock — 真实数据从 Python 后端拉，阶段二对接)
 // -----------------------------------------------------------------------------
 
+export function listStars(opts: { limit?: number } = {}): Array<{ id: number; owner: string; name: string; language: string | null; description: string | null }> {
+  // mock: 固定 5 条
+  const all = [
+    { id: 1, owner: 'fastapi', name: 'fastapi', language: 'Python', description: 'FastAPI framework, high perf, easy to learn' },
+    { id: 2, owner: 'tiangolo', name: 'uvicorn', language: 'Python', description: 'ASGI server for Python' },
+    { id: 3, owner: 'pydantic', name: 'pydantic', language: 'Python', description: 'Data validation using Python type hints' },
+    { id: 4, owner: 'vuejs', name: 'core', language: 'TypeScript', description: 'Vue.js the progressive JavaScript framework' },
+    { id: 5, owner: 'tokio-rs', name: 'tokio', language: 'Rust', description: 'An async runtime for Rust' },
+  ]
+  return all.slice(0, opts.limit ?? all.length)
+}
+
 export function getStarsStats() {
   // mock 统计 — 阶段二用 Python 后端真实数据替换
   return {
     total: 507,
-    byLanguage: { Python: 132, TypeScript: 76, JavaScript: 46, 'Jupyter Notebook': 24 },
-    bySource: { auto: 0, manual: 507 }
+    by_language: { Python: 132, TypeScript: 76, JavaScript: 46, 'Jupyter Notebook': 24 },
+    top_topics: [
+      { name: 'llm', count: 88 },
+      { name: 'agent', count: 76 },
+      { name: 'typescript', count: 65 },
+      { name: 'fastapi', count: 54 },
+      { name: 'cli', count: 49 },
+      { name: 'rag', count: 42 },
+      { name: 'pydantic', count: 38 },
+      { name: 'mcp', count: 33 },
+      { name: 'rust', count: 29 },
+      { name: 'vue', count: 27 },
+    ],
   }
 }

@@ -42,7 +42,11 @@ const navItems = [
     <div class="flex flex-1 min-h-0">
       <!-- SideNav -->
       <aside class="w-60 shrink-0 border-r border-default bg-elevated/50 overflow-y-auto">
-        <UVerticalNavigation :items="navItems" class="py-4 px-4" />
+        <UNavigationMenu
+          :items="navItems"
+          orientation="vertical"
+          class="py-4 px-4"
+        />
       </aside>
 
       <!-- Content -->

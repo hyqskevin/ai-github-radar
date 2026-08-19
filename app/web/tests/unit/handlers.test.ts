@@ -119,8 +119,8 @@ describe('T105 handlers', () => {
   it('DOC (C1): getStarsStats returns stats object', () => {
     const s = getStarsStats()
     expect(s).toHaveProperty('total')
-    expect(s).toHaveProperty('byLanguage')
-    expect(s).toHaveProperty('bySource')
+    expect(s).toHaveProperty('by_language')
+    expect(s).toHaveProperty('top_topics')
     expect(typeof s.total).toBe('number')
   })
 
