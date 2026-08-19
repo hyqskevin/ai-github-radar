@@ -1,0 +1,14 @@
+# ai-github-radar-scan.timer (T117)
+# 路径: ~/.config/systemd/user/ai-github-radar-scan.timer
+# 说明: 每 24h 触发一次 scanner.service
+[Unit]
+Description=Run ai-github-radar scanner every 24h
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=24h
+Persistent=true
+Unit=ai-github-radar-scan.service
+
+[Install]
+WantedBy=timers.target

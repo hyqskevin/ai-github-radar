@@ -1,0 +1,16 @@
+# ai-github-radar-scan.service (T117)
+# 安装: ./scripts/install-systemd.sh
+# 路径: ~/.config/systemd/user/ai-github-radar-scan.service
+# 说明: 跑 `python -m ai_github_radar scan --push local --top 10`(oneshot)
+[Unit]
+Description=ai-github-radar scanner (run scan + push)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=@PROJECT_ROOT@
+ExecStart=@PYTHON_BIN@ -m ai_github_radar scan --push local --top 10
+Environment=PYTHONPATH=@PROJECT_ROOT@/src
+StandardOutput=append:@LOG_DIR@/scanner.log
+StandardError=append:@LOG_DIR@/scanner.err
