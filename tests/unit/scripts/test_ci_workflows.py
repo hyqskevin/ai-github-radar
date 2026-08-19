@@ -69,7 +69,7 @@ def test_backend_ci_paths_filter() -> None:
     pr = d[True]["pull_request"] if True in d else d["on"]["pull_request"]
     assert "paths" in pr, "paths filter required to skip frontend-only PRs"
     paths = pr["paths"]
-    assert any("src/" in p for p in paths)
+    assert any("backend/" in p for p in paths)
     assert any("tests/" in p for p in paths)
 
 
@@ -115,7 +115,7 @@ def test_frontend_ci_paths_filter() -> None:
     on = d.get(True) or d.get("on") or {}
     pr = on["pull_request"]
     assert "paths" in pr
-    assert any("app/web/" in p for p in pr["paths"])
+    assert any("frontend/" in p for p in pr["paths"])
 
 
 def test_frontend_ci_runs_pnpm_test() -> None:

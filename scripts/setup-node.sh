@@ -6,7 +6,7 @@
 set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-WEB_DIR="$REPO_ROOT/app/web"
+WEB_DIR="$REPO_ROOT/frontend"
 
 # 锁死项目内路径（沙箱硬约束 §6）
 export NPM_CONFIG_CACHE="$REPO_ROOT/.npm-global"
@@ -42,7 +42,7 @@ echo "✓ pnpm: $(pnpm --version)"
 
 # 装项目依赖
 if [ -f "$WEB_DIR/package.json" ]; then
-  echo "📦 装 app/web 依赖..."
+  echo "📦 装 frontend 依赖..."
   cd "$WEB_DIR"
   pnpm install --prefer-offline
   echo "✓ 依赖装好"
@@ -50,4 +50,4 @@ fi
 
 echo ""
 echo "✅ Node 环境就绪"
-echo "   启动开发: cd app/web && pnpm dev"
+echo "   启动开发: cd frontend && pnpm dev"

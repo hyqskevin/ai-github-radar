@@ -176,3 +176,173 @@ def run_scan(top: int = 10, language: str | None = None, since: str = "daily") -
         "language": language or "all",
         "since": since,
     }
+
+
+# ---------------------------------------------------------------------------
+# LLM 仓库简介 / 关键字 rationale (T130)
+# ---------------------------------------------------------------------------
+
+
+def run_summarize(scope: str = "stars", only_missing: bool = True, limit: int = 100) -> dict:
+    """LLM 生成仓库简介 / 关键字 rationale(根据 scope 路由)。
+
+    - scope="stars":遍历 Star 表,用 description+topics+language 生成 1-3 句中文摘要
+    - scope="keywords":遍历 Keyword 表,基于用户 star 画像生成"为何提取"理由
+    - only_missing=True:只处理还没 summary/rationale 的(省 quota)
+    - limit:单 job 最多处理 N 条(避免长跑)
+    """
+    from ai_github_radar.llm.summarizer import (
+        LLMProviderError,
+        explain_keyword,
+        summarize_repo,
+    )
+    from ai_github_radar.storage.db import session_scope
+    from ai_github_radar.storage.repositories import KeywordRepository, StarRepository
+
+    if scope == "stars":
+        return _run_summarize_stars(only_missing, limit, summarize_repo, LLMProviderError)
+    elif scope == "keywords":
+        return _run_summarize_keywords(
+            only_missing, limit, explain_keyword, LLMProviderError, StarRepository, KeywordRepository,
+        )
+    else:
+        raise ValueError(f"unknown scope {scope!r}; valid: stars, keywords")
+
+
+def _star_cls():
+    from ai_github_radar.db.models import Star
+    return Star
+
+
+def _kw_cls():
+    from ai_github_radar.db.models import Keyword
+    return Keyword
+
+
+def _run_summarize_stars(only_missing, limit, summarize_repo, LLMProviderError):
+    """生成 Star.summary。
+
+    简化版:description + topics + language 已够 1-3 句摘要,
+    没有 fetch README(避免额外 HTTP + GitHub rate limit)。
+    """
+    from ai_github_radar.storage.db import session_scope
+    from ai_github_radar.storage.repositories import StarRepository
+
+    processed = 0
+    failed = 0
+    errors: list[str] = []
+
+    with session_scope() as s:
+        repo = StarRepository(s)
+        if only_missing:
+            stars = repo.list_missing_summary(limit=limit)
+        else:
+            stars = repo.list_all()[:limit]
+
+    log.info("summarize stars: %d candidates (only_missing=%s)", len(stars), only_missing)
+
+    for star in stars:
+        # topics 可能是 str(JSON / comma-separated) 或 list
+        topics_raw = star.topics or ""
+        if isinstance(topics_raw, list):
+            topics_list = topics_raw
+        elif isinstance(topics_raw, str) and topics_raw:
+            import json as _json
+            try:
+                parsed = _json.loads(topics_raw)
+                topics_list = parsed if isinstance(parsed, list) else []
+            except (ValueError, _json.JSONDecodeError):
+                topics_list = [t.strip() for t in topics_raw.split(",") if t.strip()]
+        else:
+            topics_list = []
+
+        try:
+            result = summarize_repo(
+                full_name=star.full_name,
+                description=star.description,
+                language=star.language,
+                topics=topics_list,
+                readme_excerpt="",
+            )
+        except Exception as e:  # noqa: BLE001
+            failed += 1
+            if len(errors) < 3:
+                errors.append(f"{star.full_name}: {type(e).__name__}: {e}")
+            log.warning("summarize %s failed: %s", star.full_name, e)
+            continue
+
+        with session_scope() as s2:
+            star_db = s2.get(_star_cls(), star.id)
+            if star_db is None:
+                continue
+            from datetime import datetime
+            star_db.summary = result.summary
+            star_db.summary_model = result.model
+            star_db.summary_at = datetime.utcnow().isoformat(timespec="seconds")
+        processed += 1
+
+    return {
+        "scope": "stars",
+        "processed": processed,
+        "failed": failed,
+        "candidates": len(stars),
+        "errors": errors,
+    }
+
+
+def _run_summarize_keywords(
+    only_missing, limit, explain_keyword, LLMProviderError,
+    StarRepository, KeywordRepository,
+):
+    """生成 Keyword.rationale — 基于用户 star 仓库的整体描述。"""
+    from ai_github_radar.storage.db import session_scope
+
+    # 1. 抽用户的 star descriptions 作为上下文(全局一次)
+    with session_scope() as s:
+        star_repo = StarRepository(s)
+        sample_descs = [sd for sd in star_repo.all_descriptions(limit=30) if sd]
+        n_stars = star_repo.count_all()
+
+        kw_repo = KeywordRepository(s)
+        if only_missing:
+            kws = kw_repo.list_missing_rationale(limit=limit)
+        else:
+            kws = kw_repo.list_all()[:limit]
+
+    log.info(
+        "summarize keywords: %d candidates, %d sample descriptions",
+        len(kws), len(sample_descs),
+    )
+
+    processed = 0
+    failed = 0
+    errors: list[str] = []
+
+    for kw in kws:
+        try:
+            rationale = explain_keyword(
+                term=kw.term,
+                sample_descriptions=sample_descs,
+                n_stars=n_stars,
+            )
+        except Exception as e:  # noqa: BLE001
+            failed += 1
+            if len(errors) < 3:
+                errors.append(f"{kw.term}: {type(e).__name__}: {e}")
+            log.warning("explain %s failed: %s", kw.term, e)
+            continue
+
+        with session_scope() as s2:
+            k = s2.get(_kw_cls(), kw.id)
+            if k is None:
+                continue
+            k.rationale = rationale
+        processed += 1
+
+    return {
+        "scope": "keywords",
+        "processed": processed,
+        "failed": failed,
+        "candidates": len(kws),
+        "errors": errors,
+    }

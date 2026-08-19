@@ -60,7 +60,7 @@ fi
 start_backend() {
     echo "🐍 starting Python backend at http://$BACKEND_HOST:$BACKEND_PORT ..."
     cd "$REPO_ROOT"
-    PYTHONPATH="$REPO_ROOT/src" "$PYTHON_BIN" -m ai_github_radar.cli web \
+    PYTHONPATH="$REPO_ROOT/backend" "$PYTHON_BIN" -m ai_github_radar.cli web \
         --host "$BACKEND_HOST" --port "$BACKEND_PORT" \
         > "$LOG_DIR/backend.log" 2>&1 &
     BACKEND_PID=$!
@@ -68,7 +68,7 @@ start_backend() {
 
 start_frontend() {
     echo "🌐 starting Nuxt dev server at http://127.0.0.1:$FRONTEND_PORT ..."
-    cd "$REPO_ROOT/app/web"
+    cd "$REPO_ROOT/frontend"
     PYTHON_BACKEND_URL="http://$BACKEND_HOST:$BACKEND_PORT" \
         pnpm dev \
         > "$LOG_DIR/frontend.log" 2>&1 &

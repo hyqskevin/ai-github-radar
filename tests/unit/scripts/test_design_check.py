@@ -41,13 +41,12 @@ def test_design_check_json_output_is_pure_json() -> None:
 def test_design_check_detects_missing_token_in_css(tmp_path) -> None:
     """main.css 删掉 primary token → exit 1。"""
     (tmp_path / "DESIGN.md").write_text((REPO_ROOT / "DESIGN.md").read_text())
-    (tmp_path / "app").mkdir()
-    (tmp_path / "app" / "web").mkdir()
-    (tmp_path / "app" / "web" / "app").mkdir()
-    (tmp_path / "app" / "web" / "app" / "assets").mkdir()
-    (tmp_path / "app" / "web" / "app" / "assets" / "css").mkdir()
+    (tmp_path / "frontend").mkdir()
+    (tmp_path / "frontend" / "app").mkdir()
+    (tmp_path / "frontend" / "app" / "assets").mkdir()
+    (tmp_path / "frontend" / "app" / "assets" / "css").mkdir()
     # main.css 缺 primary
-    (tmp_path / "app" / "web" / "app" / "assets" / "css" / "main.css").write_text(
+    (tmp_path / "frontend" / "app" / "assets" / "css" / "main.css").write_text(
         "@theme static {\n"
         "  --color-secondary-500: #938F99;\n"
         "  --color-tertiary-500: #4FD8EB;\n"

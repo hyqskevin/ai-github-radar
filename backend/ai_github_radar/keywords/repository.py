@@ -29,6 +29,20 @@ class KeywordRepository:
         stmt = stmt.order_by(Keyword.weight.desc(), Keyword.term.asc())
         return list(self._s.execute(stmt).scalars())
 
+    def list_missing_rationale(self, limit: int = 100) -> list[Keyword]:
+        """返还没生成 rationale 的关键字(rationale is null)。"""
+        stmt = (
+            select(Keyword)
+            .where(Keyword.rationale.is_(None))
+            .order_by(Keyword.updated_at.desc())
+            .limit(limit)
+        )
+        return list(self._s.execute(stmt).scalars())
+
+    def list_all(self) -> list[Keyword]:
+        """返回全部关键字(LLM rationale 全量回扫用)。"""
+        return list(self._s.execute(select(Keyword)).scalars())
+
     def get_by_term(self, term: str) -> Optional[Keyword]:
         stmt = select(Keyword).where(Keyword.term == term)
         return self._s.execute(stmt).scalar_one_or_none()

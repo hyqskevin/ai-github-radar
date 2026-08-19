@@ -62,6 +62,31 @@ class StarRepository:
     def list_all(self) -> list[Star]:
         return list(self._s.execute(select(Star)).scalars())
 
+    def list_missing_summary(self, limit: int = 100) -> list[Star]:
+        """返还没生成 summary 的 stars(summary is null)。"""
+        stmt = (
+            select(Star)
+            .where(Star.summary.is_(None))
+            .order_by(Star.fetched_at.desc())
+            .limit(limit)
+        )
+        return list(self._s.execute(stmt).scalars())
+
+    def all_descriptions(self, limit: int = 30) -> list[str]:
+        """返回最多 N 条 star 的 description(用于 LLM 关键字 rationale 上下文)。"""
+        stmt = (
+            select(Star.description)
+            .where(Star.description.isnot(None))
+            .limit(limit)
+        )
+        return [row[0] for row in self._s.execute(stmt).all()]
+
+    def count_all(self) -> int:
+        """总 star 数(给 LLM 上下文用)。"""
+        from sqlalchemy import func
+        stmt = select(func.count()).select_from(Star)
+        return int(self._s.execute(stmt).scalar_one())
+
 
 class TrendingSnapshotRepository:
     def __init__(self, session: Session):

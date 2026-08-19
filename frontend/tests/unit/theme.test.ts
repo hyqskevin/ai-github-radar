@@ -16,8 +16,8 @@ import { resolve, join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 
-const REPO_ROOT = resolve(__dirname, '../../../..')
-const SCRIPT_PATH = join(REPO_ROOT, 'scripts/theme-sync.mjs')
+const REPO_ROOT = resolve(__dirname, '../..')
+const SCRIPT_PATH = join(REPO_ROOT, '../scripts/theme-sync.mjs')
 
 describe('T102 theme-sync', () => {
   // happy: 脚本存在 + 可执行
@@ -29,9 +29,9 @@ describe('T102 theme-sync', () => {
   it('happy (C2): DESIGN.md colors all appear in generated main.css', () => {
     const r = spawnSync('node', [SCRIPT_PATH], { encoding: 'utf-8' })
     expect(r.status, `theme-sync must exit 0. stderr: ${r.stderr}`).toBe(0)
-    const mainCss = readFileSync(join(REPO_ROOT, 'app/web/app/assets/css/main.css'), 'utf-8')
+    const mainCss = readFileSync(join(REPO_ROOT, 'app/assets/css/main.css'), 'utf-8')
     // DESIGN.md 的每个 color name 都必须出现在 main.css
-    const designPath = join(REPO_ROOT, 'DESIGN.md')
+    const designPath = join(REPO_ROOT, '../DESIGN.md')
     const design = readFileSync(designPath, 'utf-8')
     const fmMatch = design.match(/colors:\n((?:  \w+:\s+"?#[0-9A-Fa-f]+"?\n?)+)/)
     expect(fmMatch, 'DESIGN.md must declare colors block').not.toBeNull()
@@ -48,7 +48,7 @@ describe('T102 theme-sync', () => {
 
   // DOC: tertiary 强调色必须可用（base hex 在 -500 档）
   it('DOC: tertiary base hex exposed as --color-tertiary-500 (Tailwind class text-tertiary-500)', () => {
-    const mainCss = readFileSync(join(REPO_ROOT, 'app/web/app/assets/css/main.css'), 'utf-8')
+    const mainCss = readFileSync(join(REPO_ROOT, 'app/assets/css/main.css'), 'utf-8')
     expect(mainCss).toMatch(/--color-tertiary-500:\s*#4FD8EB/i)
   })
 
@@ -101,13 +101,13 @@ describe('T102 theme-sync', () => {
 
   // idempotent: 跑两次结果相同
   it('idempotent: running sync twice produces same output', () => {
-    const before = readFileSync(join(REPO_ROOT, 'app/web/app/assets/css/main.css'), 'utf-8')
+    const before = readFileSync(join(REPO_ROOT, 'app/assets/css/main.css'), 'utf-8')
     const r1 = spawnSync('node', [SCRIPT_PATH], { encoding: 'utf-8' })
     expect(r1.status).toBe(0)
-    const after1 = readFileSync(join(REPO_ROOT, 'app/web/app/assets/css/main.css'), 'utf-8')
+    const after1 = readFileSync(join(REPO_ROOT, 'app/assets/css/main.css'), 'utf-8')
     const r2 = spawnSync('node', [SCRIPT_PATH], { encoding: 'utf-8' })
     expect(r2.status).toBe(0)
-    const after2 = readFileSync(join(REPO_ROOT, 'app/web/app/assets/css/main.css'), 'utf-8')
+    const after2 = readFileSync(join(REPO_ROOT, 'app/assets/css/main.css'), 'utf-8')
     expect(after1).toBe(after2)
     expect(after1).toBe(before) // DESIGN.md 没变 → main.css 不变
   })

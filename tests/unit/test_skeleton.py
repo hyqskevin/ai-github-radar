@@ -48,7 +48,7 @@ def test_c6_no_heavy_imports() -> None:
     leaked = [name for name in heavy if name in sys.modules]
     # 任何重依赖若已被 import,记下来;但允许它们在 sys.modules(因为 pytest 已 import)
     # 我们只检查 ai_github_radar 自身没主动 import 它们
-    src_text = (REPO_ROOT / "src" / "ai_github_radar" / "__init__.py").read_text(
+    src_text = (REPO_ROOT / "backend" / "ai_github_radar" / "__init__.py").read_text(
         encoding="utf-8"
     )
     for dep in heavy:

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SRC = REPO_ROOT / "src"
+SRC = REPO_ROOT / "backend"
 CONFIG_MODULE = "ai_github_radar.config"
 
 

@@ -120,6 +120,15 @@
 
 ---
 
+## 结构重构 + LLM（v0.6.0）
+
+- [x] **T135** — 扁平化 monorepo 重构：`src/ai_github_radar` → `backend/ai_github_radar`、`app/web` → `frontend`，去掉二级目录
+  - AC：`import ai_github_radar` 成功(PYTHONPATH=backend)；CI / dev.sh / audit-loop / design-check / theme-sync / 前后端 test 路径全部对齐
+- [x] **T136** — 验证 + 收尾：backend pytest + frontend vitest 全绿 → audit-loop L0 → commit + tag
+- [x] **T137** — LLM 摘要/理由：models 加 summary/rationale 列 + repositories 方法 + runner.run_summarize（含 `llm/` 包）
+
+---
+
 ## 阶段二（v0.5.0）
 
 - [ ] **T201** — LLM 摘要缓存

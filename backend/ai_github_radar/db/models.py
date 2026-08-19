@@ -49,6 +49,10 @@ class Star(Base):
         Text, nullable=False, default=_utcnow_iso, index=True
     )
     archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # T130: LLM 生成的简介(中文 1-3 句),null 表示未生成
+    summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    summary_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    summary_model: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
 
 class Keyword(Base):
@@ -71,6 +75,8 @@ class Keyword(Base):
     weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     source: Mapped[str] = mapped_column(String(16), nullable=False, default="manual")
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # T130: LLM 为何提取这个关键字的理由(中文短句),null 表示未生成
+    rationale: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[str] = mapped_column(
         Text, nullable=False, default=_utcnow_iso
     )

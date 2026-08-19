@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os'
 function readSpacingTokens(): Record<string, number> {
   // tests/unit → tests → web → app/web，需回退 3 层到项目根 (app/)
   // DESIGN.md 在项目根 (app/DESIGN.md), 因为仓库布局是 monorepo 风格
-  const designPath = resolve(__dirname, '../../../../DESIGN.md')
+  const designPath = resolve(__dirname, '../../../DESIGN.md')
   if (!existsSync(designPath)) {
     throw new Error(`DESIGN.md not found at ${designPath}`)
   }

@@ -11,8 +11,8 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 
-const REPO_ROOT = resolve(__dirname, '../../../..')
-const LAYOUT_PATH = join(REPO_ROOT, 'app/web/app/layouts/default.vue')
+const REPO_ROOT = resolve(__dirname, '../..')
+const LAYOUT_PATH = join(REPO_ROOT, 'app/layouts/default.vue')
 
 function readLayout(): string {
   if (!existsSync(LAYOUT_PATH)) {

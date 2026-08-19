@@ -24,7 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DESIGN_PATH = ROOT / "DESIGN.md"
-MAIN_CSS = ROOT / "app" / "web" / "app" / "assets" / "css" / "main.css"
+MAIN_CSS = ROOT / "frontend" / "app" / "assets" / "css" / "main.css"
 
 
 def parse_design_colors(text: str) -> dict[str, str]:
@@ -57,7 +57,7 @@ def main() -> int:
     args = parser.parse_args()
 
     design_path = args.root / "DESIGN.md"
-    css_path = args.root / "app" / "web" / "app" / "assets" / "css" / "main.css"
+    css_path = args.root / "frontend" / "app" / "assets" / "css" / "main.css"
 
     if not design_path.exists():
         print(f"ERROR: DESIGN.md not found at {design_path}", file=sys.stderr)

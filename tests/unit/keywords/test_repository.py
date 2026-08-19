@@ -133,6 +133,40 @@ def test_bulk_upsert_weight_normalized(session) -> None:
     assert c.weight == 10.0  # 1.5 * 10 = 15 → 封顶 10
 
 
+# ---- T137: LLM rationale 辅助方法 ----
+
+
+def test_list_missing_rationale_returns_only_null(session) -> None:
+    """只返回 rationale is null 的关键字。"""
+    repo = KeywordRepository(session)
+    repo.add("agent")
+    repo.add("mcp")
+    with_rationale = repo.get_by_term("mcp")
+    with_rationale.rationale = "用户关注 agent 生态"
+    session.commit()
+    missing = repo.list_missing_rationale(limit=10)
+    assert [k.term for k in missing] == ["agent"]
+    assert all(k.rationale is None for k in missing)
+
+
+def test_list_missing_rationale_respects_limit(session) -> None:
+    """limit 生效。"""
+    repo = KeywordRepository(session)
+    for t in ("a", "b", "c"):
+        repo.add(t)
+    session.commit()
+    assert len(repo.list_missing_rationale(limit=2)) == 2
+
+
+def test_list_all_returns_every_keyword(session) -> None:
+    """list_all 返回全部关键字(含已有 rationale 的)。"""
+    repo = KeywordRepository(session)
+    repo.add("agent")
+    repo.add("mcp")
+    session.commit()
+    assert {k.term for k in repo.list_all()} == {"agent", "mcp"}
+
+
 def test_get_by_id(session) -> None:
     """get_by_id 找到。"""
     repo = KeywordRepository(session)

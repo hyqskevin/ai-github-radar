@@ -52,7 +52,7 @@ TODO_DONE_RE = re.compile(r"-\s*\[x\]\s*\*\*T(\d+)\*\*")
 SPEC_REF_RE = re.compile(r"spec:\s*(\S+\.md)")
 
 # 期望的 tests 路径后缀
-TEST_PATH_RE = re.compile(r"^src/(.+)\.py$")
+TEST_PATH_RE = re.compile(r"^backend/(.+)\.py$")
 
 
 # ---------------------------------------------------------------------------
@@ -239,20 +239,40 @@ def _guess_src_for_todo(root: Path, tid: str) -> Path | None:
     line = m.group(0)
     src_m = re.search(r"`([\w/]+\.py)`", line)
     if src_m:
-        return root / "src" / "ai_github_radar" / src_m.group(1) if not src_m.group(1).startswith("src/") else root / src_m.group(1)
+        rel = src_m.group(1)
+        if rel.startswith("src/ai_github_radar/"):
+            rel = rel[len("src/ai_github_radar/"):]  # 旧 path → bare module path
+        elif rel.startswith("src/"):
+            rel = rel[len("src/"):]
+        elif rel.startswith("backend/ai_github_radar/"):
+            rel = rel[len("backend/ai_github_radar/"):]
+        elif rel.startswith("backend/"):
+            rel = rel[len("backend/"):]
+        # 实际 backend/ai_github_radar/<rel> 才是真实包路径
+        candidate = root / "backend" / "ai_github_radar" / rel
+        if candidate.exists():
+            return candidate
+        # fallback: 老的 flat backend/<rel>(迁移前 records)
+        return root / "backend" / rel
     return None
 
 
 def _guess_test_path(root: Path, src_path: Path) -> Path | None:
     """src_path -> tests/unit/test_<path_under_src>.py。"""
     try:
-        rel = src_path.relative_to(root / "src" / "ai_github_radar")
+        rel = src_path.relative_to(root / "backend")
     except ValueError:
         try:
-            rel = src_path.relative_to(root / "src")
+            rel = src_path.relative_to(root / "src" / "ai_github_radar")
         except ValueError:
-            return None
+            try:
+                rel = src_path.relative_to(root / "src")
+            except ValueError:
+                return None
     flat = str(rel.with_suffix("")).replace("/", "_").replace("-", "_")
+    # backend/cli/foo.py → test_cli_foo.py(strip "ai_github_radar" prefix)
+    if flat.startswith("ai_github_radar_"):
+        flat = flat[len("ai_github_radar_"):]
     return root / "tests" / "unit" / f"test_{flat}.py"
 
 

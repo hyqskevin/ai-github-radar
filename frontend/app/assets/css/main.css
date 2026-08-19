@@ -12,6 +12,19 @@
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', 'Menlo', 'Consolas', monospace;
 
+  /* DESIGN.md colors.primary = #E6E1E5 */
+  --color-primary-50: #FFFFFF;
+  --color-primary-100: #FBF8FB;
+  --color-primary-200: #F4EFF4;
+  --color-primary-300: #EEEAEE;
+  --color-primary-400: #EAE5EA;
+  --color-primary-500: #E6E1E5;
+  --color-primary-600: #BFBEC3;
+  --color-primary-700: #97989C;
+  --color-primary-800: #6F7276;
+  --color-primary-900: #4D5053;
+  --color-primary-950: #303235;
+
   /* DESIGN.md colors.secondary = #938F99 */
   --color-secondary-50: #FFFFFF;
   --color-secondary-100: #FFFFFF;

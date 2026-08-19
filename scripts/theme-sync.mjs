@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(__dirname, '..')
 const DESIGN_PATH = join(REPO_ROOT, 'DESIGN.md')
-const APP_CONFIG_PATH = join(REPO_ROOT, 'app/web/app/app.config.ts')
-const MAIN_CSS_PATH = join(REPO_ROOT, 'app/web/app/assets/css/main.css')
+const APP_CONFIG_PATH = join(REPO_ROOT, 'frontend/app/app.config.ts')
+const MAIN_CSS_PATH = join(REPO_ROOT, 'frontend/app/assets/css/main.css')
 
 const ARGS = process.argv.slice(2)
 const CHECK_ONLY = ARGS.includes('--check')

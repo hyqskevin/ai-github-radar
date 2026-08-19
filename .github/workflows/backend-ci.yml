@@ -7,7 +7,7 @@ name: backend-ci
 on:
   pull_request:
     paths:
-      - 'src/**'
+      - 'backend/**'
       - 'tests/**'
       - 'scripts/**'
       - 'pyproject.toml'
@@ -41,12 +41,12 @@ jobs:
       - name: ruff check
         run: |
           source .venv/bin/activate
-          ruff check src tests scripts
+          ruff check backend tests scripts
 
       - name: ruff format check
         run: |
           source .venv/bin/activate
-          ruff format --check src tests scripts
+          ruff format --check backend tests scripts
 
       - name: audit-loop (L0/L1/L2/L4/L5/L7/L8)
         run: |
@@ -59,8 +59,8 @@ jobs:
       - name: pytest + coverage
         run: |
           source .venv/bin/activate
-          PYTHONPATH=src python -m pytest tests/unit \
-            --cov=src/ai_github_radar \
+          PYTHONPATH=backend python -m pytest tests/unit \
+            --cov=ai_github_radar \
             --cov-report=xml \
             --cov-report=term \
             --cov-fail-under=80

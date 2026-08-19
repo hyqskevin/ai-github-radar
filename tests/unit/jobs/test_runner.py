@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import threading
 import time
+from unittest.mock import patch
 
 import pytest
 
 from ai_github_radar.db.models import Job
 from ai_github_radar.storage.db import session_scope
-from ai_github_radar.jobs.runner import submit_task
+from ai_github_radar.jobs.runner import run_summarize, submit_task
 
 
 @pytest.fixture()
@@ -131,3 +132,87 @@ def test_submit_multiple_concurrent(db):
     for jid in (j1, j2, j3):
         f = _wait_for_job(jid)
         assert f.status == "success"
+
+
+# ---------------------------------------------------------------------------
+# run_summarize (T137)
+# ---------------------------------------------------------------------------
+
+
+def test_run_summarize_invalid_scope_raises(db):
+    from ai_github_radar.llm.summarizer import LLMProviderError
+    with pytest.raises(ValueError):
+        run_summarize(scope="bogus")
+
+
+def test_run_summarize_stars_sets_summary(db):
+    from ai_github_radar.db.models import Star
+    from ai_github_radar.llm.summarizer import SummaryResult
+
+    with session_scope() as s:
+        star = Star(
+            repo_id=1, owner="o", name="r", full_name="o/r",
+            description="async web framework", language="python",
+            topics='["web"]',
+        )
+        s.add(star)
+        s.commit()
+        star_id = star.id
+
+    fake = SummaryResult("一个异步 Web 框架", "openai/test")
+    with patch(
+        "ai_github_radar.llm.summarizer.summarize_repo", return_value=fake
+    ) as mocked:
+        result = run_summarize(scope="stars", only_missing=True, limit=10)
+
+    assert mocked.called
+    assert result["processed"] == 1
+    with session_scope() as s:
+        row = s.get(Star, star_id)
+        assert row.summary == "一个异步 Web 框架"
+        assert row.summary_model == "openai/test"
+        assert row.summary_at is not None
+
+
+def test_run_summarize_keywords_sets_rationale(db):
+    from ai_github_radar.db.models import Keyword
+
+    with session_scope() as s:
+        kw = Keyword(term="agent", weight=5.0, source="auto")
+        s.add(kw)
+        s.commit()
+        kw_id = kw.id
+
+    with patch(
+        "ai_github_radar.llm.summarizer.explain_keyword",
+        return_value="用户关注 agent 生态",
+    ) as mocked:
+        result = run_summarize(scope="keywords", only_missing=True, limit=10)
+
+    assert mocked.called
+    assert result["processed"] == 1
+    with session_scope() as s:
+        row = s.get(Keyword, kw_id)
+        assert row.rationale == "用户关注 agent 生态"
+
+
+def test_run_summarize_stars_counts_failures(db):
+    """个别 star 摘要失败 → failed 计数 + 错误记录,不中断。"""
+    from ai_github_radar.db.models import Star
+    from ai_github_radar.llm.summarizer import LLMProviderError, SummaryResult
+
+    with session_scope() as s:
+        s.add(Star(repo_id=1, owner="o", name="a", full_name="o/a"))
+        s.add(Star(repo_id=2, owner="o", name="b", full_name="o/b"))
+        s.commit()
+
+    def fake(*args, **kwargs):
+        raise LLMProviderError("provider down")
+
+    with patch("ai_github_radar.llm.summarizer.summarize_repo", side_effect=fake):
+        result = run_summarize(scope="stars", only_missing=True, limit=10)
+
+    assert result["processed"] == 0
+    assert result["failed"] == 2
+    assert len(result["errors"]) == 2
+    assert any("provider down" in e for e in result["errors"])

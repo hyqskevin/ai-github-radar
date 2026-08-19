@@ -27,7 +27,7 @@ def _run_audit(
     env = {
         "PATH": "/usr/bin:/bin:/usr/local/bin",
         "HOME": str(project_root / "fake-home"),
-        "PYTHONPATH": str(REPO_ROOT / "src"),
+        "PYTHONPATH": str(REPO_ROOT / "backend"),
     }
     if env_extra:
         env.update(env_extra)
@@ -119,18 +119,24 @@ def test_ac3_l1_detects_missing_spec_reference(tmp_path: Path) -> None:
 
 
 def test_ac4_l4_detects_missing_happy_path_test(tmp_path: Path) -> None:
-    """AC-4: T999 已完成但无 tests,strict 模式退出码 1。"""
+    """AC-4: 写的 TODO 引用不存在的 src → audit 跳过(not enforced)。
+
+    真实场景(L4): src 存在但 test 不存在。L4 用 _guess_src_for_todo + _guess_test_path,
+    我们建一个 src + TODO,但不创建对应 test,期望 L4 报错。
+    """
     _seed_required_docs(tmp_path)
-    # 用真实存在的 src 文件,fixture 让 _guess_src_for_todo 命中,然后缺 test
-    (tmp_path / "src" / "ai_github_radar" / "github").mkdir(parents=True)
-    (tmp_path / "src" / "ai_github_radar" / "github" / "client.py").write_text(
+    # 用真实不存在的 src 路径(避免推断到已有 test)
+    (tmp_path / "backend" / "ai_github_radar" / "fakemod").mkdir(parents=True)
+    (tmp_path / "backend" / "ai_github_radar" / "fakemod" / "foo.py").write_text(
         "# ok\n", encoding="utf-8"
     )
     (tmp_path / "docs" / "TODO.md").write_text(
-        "- [x] **T005** — sample `github/client.py`\n",
+        "- [x] **T005** — sample `fakemod/foo.py`\n",
         encoding="utf-8",
     )
+    _git_init_with_commit(tmp_path, "TODO(005): sample")
     result = _run_audit(tmp_path, "--strict")
+    # test_audit_loop 推断 test 路径 → tests/unit/test_fakemod_foo.py → 不存在 → ERROR
     assert "[L4]" in result.stdout
     assert "ERROR" in result.stdout
     assert result.returncode == 1
