@@ -263,6 +263,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 后端:`256 passed` unit (含 17 local_deploy)
 - audit:`0 ERROR,1 WARN`(老的 commit prefix)
 
+## [0.5.0] - 2026-08-19
+
+GitHub Actions CI 版本。后端 + 前端 + 总入口三个 workflow。
+
+### Added
+
+#### backend-ci.yml(T122)
+- ruff check + format check
+- `audit-loop.py --strict`(L0/L1/L2/L4/L5/L7/L8)
+- `design-check.py`(DESIGN ↔ main.css)
+- pytest + `pytest-cov --cov-fail-under=80`(覆盖率门槛)
+- codecov 上传(`fail_ci_if_error: false` 不阻塞)
+- `paths:` 过滤 src/tests/scripts/pyproject.toml 改动
+
+#### frontend-ci.yml(T123)
+- `test` job:`pnpm install --frozen-lockfile` + vitest + build
+- `e2e` job:`pnpm build` + preview server + Playwright(`--with-deps chromium`)
+- `paths:` 过滤 `app/web/**`
+- failure 时 upload Playwright report(`actions/upload-artifact@v4`)
+
+#### ci.yml 总入口(T122)
+- reusable workflow:`uses: ./.github/workflows/backend-ci.yml`
+- 并行跑 backend + frontend,各自独立 fail
+
+#### pyproject.toml
+- `pyyaml>=6.0` 加入 dev(workflow YAML 验证需要)
+- `types-PyYAML>=6.0` 早已存在
+
+#### 测试(T121)
+- `tests/unit/scripts/test_ci_workflows.py` — 20 测试
+  - YAML 合法 / 触发器 / paths 过滤 / 关键步骤 / reusable workflow
+  - backend: ruff + audit + design-check + pytest --cov-fail-under
+  - frontend: pnpm test + build + playwright install + upload-artifact
+
+#### README
+- 顶部加 3 个 CI badge
+
+### Verified
+
+- YAML 合法(`yaml.safe_load` 通过)
+- audit-loop:0 ERROR,1 WARN
+- 后端 276 passed (含 20 ci_workflows + 17 local_deploy + 4 design_check)
+- design-check:7/7 token 同步
+
 ## [Unreleased]
 
 阶段二规划:
@@ -271,8 +315,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 多用户隔离
 - WebSocket 实时推送
 - 嵌入相似度(替代 TF-IDF 关键字精确匹配)
-- CI(github actions 跑 tests + audit + e2e)
 
+[0.5.0]: #050----2026-08-19
 [0.4.0]: #040----2026-08-19
 [0.3.0]: #030----2026-08-19
 [0.2.0]: #020----2026-08-19

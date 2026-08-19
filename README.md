@@ -2,6 +2,10 @@
 
 > **AI 驱动的 GitHub 项目发现工具** — 从你的 star 历史建模偏好，提取关键字，定期扫描 trending 给你推送匹配的项目。
 
+[![backend-ci](https://github.com/hyqskevin/ai-github-radar/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/hyqskevin/ai-github-radar/actions/workflows/backend-ci.yml)
+[![frontend-ci](https://github.com/hyqskevin/ai-github-radar/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/hyqskevin/ai-github-radar/actions/workflows/frontend-ci.yml)
+[![ci](https://github.com/hyqskevin/ai-github-radar/actions/workflows/ci.yml/badge.svg)](https://github.com/hyqskevin/ai-github-radar/actions/workflows/ci.yml)
+
 ## 它解决什么问题
 
 用 AI 写代码的人常陷入"不知道新出了什么好东西"的循环：
@@ -100,7 +104,7 @@ uv run python -m ai_github_radar.cli keyword del python
 
 ## 当前已实现功能
 
-### 阶段一 ✅ 后端 + 前端 + 部署
+### 阶段一 ✅ 后端 + 前端 + 部署 + CI
 
 #### 后端(v0.1.0)
 - [x] **项目骨架** — Python 3.12 + .venv + pyproject + 8 步 loop
@@ -117,7 +121,7 @@ uv run python -m ai_github_radar.cli keyword del python
 - [x] **Web UI**(T013) — FastAPI 本地 UI,渲染推荐 / 关键字表 + REST API CRUD
 - [x] **存储层**(T014) — `session_scope` + 3 个 Repository
 - [x] **周期调度**(T015) — in-process `run_forever` + `run_once`,stop_event 优雅退出
-- [x] **测试 + audit**(T016) — 256 单元测试,**89% 覆盖率**,`audit-loop --strict` 0 ERROR / 0 WARN
+- [x] **测试 + audit**(T016) — 276 单元测试,**89% 覆盖率**,`audit-loop --strict` 0 ERROR / 0 WARN
 
 #### 前端(v0.2.0)
 - [x] **Nuxt 4 骨架**(T101) — `pnpm dev` 起服务,HTTP 200
@@ -137,11 +141,16 @@ uv run python -m ai_github_radar.cli keyword del python
 - [x] **Linux systemd timer**(T117) — `~/.config/systemd/user/` service + timer,Persistent=true 补跑
 - [x] **install/uninstall 脚本**(T119) — 都支持 `--dry-run`,OS 守卫 + 友好提示
 
+#### CI(v0.5.0)
+- [x] **GitHub Actions backend-ci**(T122) — ruff + pytest --cov-fail-under=80 + audit-loop --strict + design-check + codecov
+- [x] **GitHub Actions frontend-ci**(T123) — pnpm test + build + preview + Playwright e2e (chromium),failure 时 upload 报告
+- [x] **总入口 ci.yml**(T122) — reusable workflow 并行 backend + frontend
+- [x] **paths 过滤**(T121) — 避免前端 PR 误触发后端 CI
+
 ### 下一阶段(阶段二)
 - [ ] LLM 摘要缓存(同 stars 输入复用)
 - [ ] 多用户隔离
 - [ ] 嵌入相似度(替代 TF-IDF 关键字精确匹配)
-- [ ] CI(github actions 跑 tests + audit + e2e)
 
 ## 设计文档(13 维度)
 
