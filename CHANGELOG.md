@@ -209,17 +209,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/superpowers/specs/2026-08-*.md` — 18 份 spec(每个 TODO 一份,TDD 前置)
 - README 更新 — 「当前已实现功能」勾完 15 条
 
+## [0.4.0] - 2026-08-19
+
+本地部署 + 周期调度版本。macOS launchd / Linux systemd 双平台支持。
+
+### Added
+
+#### dev.sh 重写(T118)
+- 同时拉起 Python 后端 `:8765` + Nuxt 前端 `:5173`
+- 自动设 `PYTHON_BACKEND_URL=http://127.0.0.1:8765` 环境变量
+- `wait_for_backend()` 等 `/api/keywords` 返 200 才启前端
+- `trap SIGINT → kill 两端`
+- 支持 `--backend` / `--frontend` / `BACKEND_PORT=9000`
+- logs 写 `data/logs/{backend,frontend}.log`
+
+#### macOS launchd(T116)
+- `scripts/templates/com.ai-github-radar.scanner.plist`
+  - `StartInterval=86400`(每 24h)
+  - `RunAtLoad=true`(立刻)
+  - `KeepAlive.SuccessfulExit/Crashed=false`(跑完即退出)
+  - `PYTHONPATH=src` 注入 .venv
+- `scripts/install-launchd.sh`
+  - macOS-only (`uname -s == Darwin`)
+  - 占位符替换 (`@PROJECT_ROOT@` `@PYTHON_BIN@` `@LOG_DIR@`)
+  - `launchctl load` + 验证
+  - `--dry-run` 支持
+- `scripts/uninstall-launchd.sh` — `launchctl unload` + `rm plist`
+
+#### Linux systemd user timer(T117)
+- `scripts/templates/ai-github-radar-scan.service` — `Type=oneshot`
+- `scripts/templates/ai-github-radar-scan.timer`
+  - `OnBootSec=1min` + `OnUnitActiveSec=24h`
+  - `Persistent=true`(错过调度时间会补跑)
+- `scripts/install-systemd.sh`
+  - Linux-only
+  - `systemctl --user enable --now ai-github-radar-scan.timer`
+  - 提示 `loginctl enable-linger`
+- `scripts/uninstall-systemd.sh`
+
+#### 测试(T115)
+- `tests/unit/scripts/test_local_deploy.py` — 17 测试
+  - plist 模板占位符 / sed 后合法 XML / `StartInterval=86400` / `KeepAlive=false`
+  - systemd 模板 24h + Persistent + INI 合法
+  - install/uninstall 脚本可执行
+  - `--dry-run` 不破坏系统(macOS/Linux cross-platform skip)
+
+### Verified
+
+- `./scripts/dev.sh` → 18s 后两端 HTTP 200
+- `/api/integration/health` → `python_reachable: true`
+- `./scripts/install-launchd.sh --dry-run` → `[DRY-RUN]` 输出,无副作用
+- `./scripts/install-systemd.sh` (macOS) → 友好 refuse "use install-launchd.sh on macOS"
+- 后端:`256 passed` unit (含 17 local_deploy)
+- audit:`0 ERROR,1 WARN`(老的 commit prefix)
+
 ## [Unreleased]
 
 阶段二规划:
 
-- macOS launchd / Linux systemd 周期调度脚本
 - LLM 摘要缓存(同 stars 输入复用)
-- Docker 镜像(用户主动跳过,留给下一会话)
 - 多用户隔离
 - WebSocket 实时推送
 - 嵌入相似度(替代 TF-IDF 关键字精确匹配)
+- CI(github actions 跑 tests + audit + e2e)
 
+[0.4.0]: #040----2026-08-19
 [0.3.0]: #030----2026-08-19
 [0.2.0]: #020----2026-08-19
 [0.1.0]: #010----2026-08-19

@@ -74,9 +74,33 @@ uv run python -m ai_github_radar.cli keyword toggle agent
 uv run python -m ai_github_radar.cli keyword del python
 ```
 
+## 周期调度(后台跑)
+
+不用 cron,直接用 OS 自带的调度器:
+
+```bash
+# macOS (launchd)
+./scripts/install-launchd.sh
+# 验证: launchctl list | grep ai-github-radar
+# 日志: data/logs/scanner.log
+# 卸载: ./scripts/uninstall-launchd.sh
+
+# Linux (systemd user timer)
+./scripts/install-systemd.sh
+# 验证: systemctl --user list-timers | grep ai-github-radar
+# 日志: data/logs/scanner.log
+# 卸载: ./scripts/uninstall-systemd.sh
+```
+
+**调度行为**:每 24h 自动跑 `python -m ai_github_radar scan --push local --top 10`,结果写 `./data/recommendations/YYYY-MM-DD.md`。
+
+`RunAtLoad=true` / `OnBootSec=1min` → 装上立刻跑一次。
+
+不需要 root:launchd 用 `~/Library/LaunchAgents/`,systemd 用 `~/.config/systemd/user/`(建议 `sudo loginctl enable-linger $USER` 让 timer 在 logout 后继续)。
+
 ## 当前已实现功能
 
-### 阶段一 ✅ 后端 + 前端联调
+### 阶段一 ✅ 后端 + 前端 + 部署
 
 #### 后端(v0.1.0)
 - [x] **项目骨架** — Python 3.12 + .venv + pyproject + 8 步 loop
@@ -93,7 +117,7 @@ uv run python -m ai_github_radar.cli keyword del python
 - [x] **Web UI**(T013) — FastAPI 本地 UI,渲染推荐 / 关键字表 + REST API CRUD
 - [x] **存储层**(T014) — `session_scope` + 3 个 Repository
 - [x] **周期调度**(T015) — in-process `run_forever` + `run_once`,stop_event 优雅退出
-- [x] **测试 + audit**(T016) — 241 单元测试,**89% 覆盖率**,`audit-loop --strict` 0 ERROR / 0 WARN
+- [x] **测试 + audit**(T016) — 256 单元测试,**89% 覆盖率**,`audit-loop --strict` 0 ERROR / 0 WARN
 
 #### 前端(v0.2.0)
 - [x] **Nuxt 4 骨架**(T101) — `pnpm dev` 起服务,HTTP 200
@@ -107,11 +131,17 @@ uv run python -m ai_github_radar.cli keyword del python
 - [x] **DESIGN ↔ main.css 交叉验证**(T111) — `scripts/design-check.py` + audit L5
 - [x] **Playwright e2e**(T113) — 7 测试覆盖 6 pages + 2 API,真 Chromium 跑
 
+#### 本地部署(v0.4.0)
+- [x] **一键 dev.sh**(T118) — 同时拉起后端 :8765 + 前端 :5173,自动 `wait_for_backend` + trap kill
+- [x] **macOS launchd**(T116) — `~/Library/LaunchAgents/` plist 每 24h 跑 `python -m ai_github_radar scan`
+- [x] **Linux systemd timer**(T117) — `~/.config/systemd/user/` service + timer,Persistent=true 补跑
+- [x] **install/uninstall 脚本**(T119) — 都支持 `--dry-run`,OS 守卫 + 友好提示
+
 ### 下一阶段(阶段二)
-- [ ] macOS launchd / Linux systemd 周期调度脚本
 - [ ] LLM 摘要缓存(同 stars 输入复用)
 - [ ] 多用户隔离
 - [ ] 嵌入相似度(替代 TF-IDF 关键字精确匹配)
+- [ ] CI(github actions 跑 tests + audit + e2e)
 
 ## 设计文档(13 维度)
 
