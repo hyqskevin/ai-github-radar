@@ -306,7 +306,7 @@ def _star_to_dict(s: Any) -> dict:
 @api_router.get("/stars")
 def api_list_stars(limit: int = 200, offset: int = 0) -> dict:
     """列我 star 的仓库(从 SQLite `stars` 表读)。"""
-    from sqlalchemy import select
+    from sqlalchemy import func, select
     from ai_github_radar.storage.db import init_db, session_scope
     from ai_github_radar.db.models import Star
 
@@ -319,7 +319,8 @@ def api_list_stars(limit: int = 200, offset: int = 0) -> dict:
             .offset(offset)
         )
         stars = list(s.execute(stmt).scalars())
-    return {"stars": [_star_to_dict(x) for x in stars], "limit": limit, "offset": offset}
+        total = s.execute(select(func.count()).select_from(Star)).scalar() or 0
+    return {"stars": [_star_to_dict(x) for x in stars], "limit": limit, "offset": offset, "total": total}
 
 
 @api_router.get("/stars/stats")

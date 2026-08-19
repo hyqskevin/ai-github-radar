@@ -28,12 +28,20 @@ const { data: stats, pending: statsPending } = await useFetch<Stats>('/api/stars
   default: () => ({ total: 0, by_language: {}, top_topics: [] })
 })
 
-const { data: starsData, pending: starsPending2, refresh } = await useFetch<{ stars: Star[]; limit: number }>(
+const PAGE_SIZE = 20
+const page = ref(1)
+
+const { data: starsData, pending: starsPending2, refresh } = await useFetch<{ stars: Star[]; limit: number; offset: number; total: number }>(
   '/api/stars',
-  { default: () => ({ stars: [], limit: 200 }) }
+  {
+    query: computed(() => ({ limit: PAGE_SIZE, offset: (page.value - 1) * PAGE_SIZE })),
+    default: () => ({ stars: [], limit: PAGE_SIZE, offset: 0, total: 0 })
+  }
 )
 
 const stars = computed(() => starsData.value?.stars ?? [])
+
+const totalPages = computed(() => Math.ceil((starsData.value?.total ?? 0) / PAGE_SIZE))
 
 const langEntries = computed(() =>
   Object.entries(stats.value?.by_language || {})
@@ -224,6 +232,18 @@ async function pollJobUntilDone(id: number) {
             <span v-else class="text-xs text-dimmed">—</span>
           </template>
         </UTable>
+
+        <div v-if="stars.length > 0 && totalPages > 1" class="mt-4 flex items-center justify-end gap-3">
+          <span class="text-xs text-muted tabular-nums">
+            共 {{ starsData?.total ?? 0 }} 个仓库 · 第 {{ page }} / {{ totalPages }} 页
+          </span>
+          <UPagination
+            v-model="page"
+            :page-count="PAGE_SIZE"
+            :total="starsData?.total ?? 0"
+            :max="7"
+          />
+        </div>
       </UCard>
     </template>
   </div>

@@ -139,3 +139,56 @@ def test_openapi_docs_available(client: TestClient) -> None:
     """/docs 路由可访问(FastAPI 自动)。"""
     resp = client.get("/docs")
     assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# T138 — /api/stars 分页(total / offset / 空库)
+# ---------------------------------------------------------------------------
+
+
+def _seed_stars(client: TestClient, n: int) -> None:
+    """直接向当前 DB 插入 n 条 Star(绕过 GitHub 拉取)。"""
+    from ai_github_radar.db.models import Star
+    from ai_github_radar.storage.db import session_scope
+
+    with session_scope() as s:
+        for i in range(n):
+            s.add(Star(
+                repo_id=i + 1,
+                owner="o",
+                name=f"r{i}",
+                full_name=f"o/r{i}",
+                description=f"repo {i}",
+            ))
+
+
+def test_ac1_stars_pagination_returns_total(client: TestClient) -> None:
+    """T138 AC-1: limit+offset 生效且返回 total。"""
+    _seed_stars(client, 3)
+    resp = client.get("/api/stars?limit=2&offset=0")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["stars"]) == 2
+    assert data["total"] == 3
+    assert data["limit"] == 2
+    assert data["offset"] == 0
+
+
+def test_ac_stars_offset_no_overlap(client: TestClient) -> None:
+    """T138 AC-2: offset 翻页不重叠。"""
+    _seed_stars(client, 3)
+    page1 = client.get("/api/stars?limit=2&offset=0").json()["stars"]
+    page2 = client.get("/api/stars?limit=2&offset=2").json()["stars"]
+    id1 = {r["repo_id"] for r in page1}
+    id2 = {r["repo_id"] for r in page2}
+    assert len(id1 & id2) == 0
+    assert len(page1) == 2
+    assert len(page2) == 1  # 3 条里只剩最后一条
+
+
+def test_ac_stars_total_zero_when_empty(client: TestClient) -> None:
+    """T138 AC-4: 空库 total=0,stars=[]。"""
+    resp = client.get("/api/stars?limit=2&offset=0")
+    data = resp.json()
+    assert data["stars"] == []
+    assert data["total"] == 0

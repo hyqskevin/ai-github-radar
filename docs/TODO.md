@@ -126,6 +126,9 @@
   - AC：`import ai_github_radar` 成功(PYTHONPATH=backend)；CI / dev.sh / audit-loop / design-check / theme-sync / 前后端 test 路径全部对齐
 - [x] **T136** — 验证 + 收尾：backend pytest + frontend vitest 全绿 → audit-loop L0 → commit + tag
 - [x] **T137** — LLM 摘要/理由：models 加 summary/rationale 列 + repositories 方法 + runner.run_summarize（含 `llm/` 包）
+- [x] **T138** — star 列表分页：后端 `/api/stars` 加 total + 前端 stars.vue 分页 UI（offset/limit）
+  - spec：docs/superpowers/specs/2026-08-19-stars-pagination-design.md
+  - AC：后端返回 `total`，前端 UPagination 翻页传 offset → 后端测试 + 前端源文件断言绿
 
 ---
 

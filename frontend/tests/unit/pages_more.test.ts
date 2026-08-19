@@ -70,6 +70,21 @@ describe('T110 page: stars', () => {
   })
 })
 
+describe('T138 page: stars pagination', () => {
+  it('uses UPagination and computes page count from total', () => {
+    const src = pageSource('stars.vue')
+    expect(src).toContain('UPagination')
+    expect(src).toContain('total')
+    expect(src).toContain('Math.ceil')
+  })
+  it('passes limit+offset to /api/stars fetch', () => {
+    const src = pageSource('stars.vue')
+    expect(src).toContain('/api/stars')
+    expect(src).toMatch(/limit/)
+    expect(src).toMatch(/offset/)
+  })
+})
+
 describe('T125 page: settings', () => {
   it('renders 设置 + GitHub / LLM sections', async () => {
     const src = pageSource('settings.vue')
