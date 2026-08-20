@@ -91,7 +91,12 @@ describe('T125 page: settings', () => {
     expect(src).toContain('设置')
     expect(src).toContain('GitHub')
     expect(src).toContain('LLM')
-    expect(src).toContain('OpenAI')
+    // T140: provider/model/api_key 均为 UInput,不再含 USelectMenu 或 OpenAI 字串
+    expect(src).toContain('config.llmProvider')
+    expect(src).toContain('config.llmModel')
+    expect(src).toContain('config.llmApiKey')
+    expect(src).not.toContain('USelectMenu')
+    expect(src).not.toContain('llmProviders')
   })
   it('no longer has 推送 UI', async () => {
     const src = pageSource('settings.vue')

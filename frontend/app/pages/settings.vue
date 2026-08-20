@@ -20,16 +20,6 @@ const saving = ref(false)
 const saveOk = ref(false)
 const error = ref<string | null>(null)
 
-const llmProviders = [
-  { label: 'none (TF-IDF 关键字提取)', value: 'none' },
-  { label: 'OpenAI', value: 'openai' },
-  { label: 'Anthropic', value: 'anthropic' },
-  { label: 'DeepSeek', value: 'deepseek' },
-  { label: 'Qwen (DashScope)', value: 'dashscope' },
-  { label: 'Moonshot (Kimi)', value: 'moonshot' },
-  { label: 'Zhipu (智谱 GLM)', value: 'zhipuai' },
-]
-
 async function loadConfig() {
   try {
     const r = await $fetch<{
@@ -160,15 +150,14 @@ onMounted(loadConfig)
         </h2>
       </template>
       <div class="space-y-4">
-        <UFormField label="Provider" help="关键字提取用的 LLM provider;none = TF-IDF 基线">
-          <USelectMenu
+        <UFormField label="Provider" help="关键字提取用的 LLM provider;留 none = TF-IDF 基线。常用:openai / anthropic / deepseek / dashscope / moonshot / zhipuai">
+          <UInput
             v-model="config.llmProvider"
-            :options="llmProviders"
-            value-key="value"
+            placeholder="例:deepseek"
           />
         </UFormField>
 
-        <UFormField v-if="config.llmProvider !== 'none'" label="Model" help="留空走 provider 默认">
+        <UFormField label="Model" help="模型名;留空走 provider 默认。例:deepseek-chat / gpt-4o-mini / qwen-plus / moonshot-v1-8k">
           <UInput v-model="config.llmModel" placeholder="例:deepseek-chat / gpt-4o-mini" />
         </UFormField>
 
