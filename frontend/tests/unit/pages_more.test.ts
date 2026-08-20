@@ -99,6 +99,9 @@ describe('T125 page: settings', () => {
     expect(src).toContain('config.llmBaseUrl')
     expect(src).toContain('llm_base_url')
     expect(src).toContain('https://api.minimax.chat/v1')
+    // T143: 每张卡片独立保存按钮
+    expect(src).toContain('保存 LLM 配置')
+    expect(src).toContain('保存 GitHub 配置')
     expect(src).not.toContain('USelectMenu')
     expect(src).not.toContain('llmProviders')
   })

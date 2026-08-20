@@ -184,6 +184,19 @@ onMounted(loadConfig)
         <p v-if="config.apiKeySet" class="text-xs text-success">
           ✓ API key 已配置
         </p>
+
+        <div class="flex justify-end pt-2">
+          <UButton
+            color="primary"
+            variant="solid"
+            icon="i-lucide-save"
+            :loading="saving"
+            :disabled="saving"
+            @click="saveConfig"
+          >
+            保存 LLM 配置
+          </UButton>
+        </div>
       </div>
     </UCard>
 
@@ -209,6 +222,19 @@ onMounted(loadConfig)
         <p v-if="config.githubTokenSet" class="text-xs text-success text-sm">
           ✓ GitHub token 已配置
         </p>
+
+        <div class="flex justify-end pt-2">
+          <UButton
+            color="primary"
+            variant="solid"
+            icon="i-lucide-save"
+            :loading="saving"
+            :disabled="saving"
+            @click="saveConfig"
+          >
+            保存 GitHub 配置
+          </UButton>
+        </div>
       </div>
     </UCard>
 
@@ -250,10 +276,5 @@ onMounted(loadConfig)
         <li>用 LLM(默认)/TF-IDF 提取关键字 → 写入 <code>keywords</code> 表</li>
       </ol>
     </UAlert>
-    <div class="flex justify-end -mt-4">
-      <UButton color="neutral" variant="ghost" icon="i-lucide-save" :loading="saving" :disabled="saving" @click="saveConfig">
-        仅保存
-      </UButton>
-    </div>
   </div>
 </template>

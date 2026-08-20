@@ -140,6 +140,9 @@
 - [x] **T142** — 设置页 LLM Base URL：后端 KEY_LLM_BASE_URL + /settings/llm POST/GET + /settings/all 返回；前端新增 Base URL 输入；summarizer 读取
   - spec：docs/superpowers/specs/2026-08-20-llm-base-url-setting-design.md
   - AC：浏览器 Base URL 输入框可见并可填；后端 roundtrip 测试 3/3 绿；audit-loop 0 错误
+- [x] **T143** — 设置页每卡片独立保存按钮：LLM 卡「保存 LLM 配置」、GitHub 卡「保存 GitHub 配置」、初始化卡「保存配置 + 立即拉取」
+  - spec：docs/superpowers/specs/2026-08-20-per-card-save-buttons-design.md
+  - AC：浏览器 DOM 快照三个按钮 visible；pages_more 测试断言两字串；audit-loop 0 错误
 
 ---
 
