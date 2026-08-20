@@ -13,7 +13,6 @@ const navItems = [
   { label: '推荐列表', icon: 'i-lucide-list', to: '/recommendations' },
   { label: '我的 Star', icon: 'i-lucide-star', to: '/stars' },
   { label: '关键字', icon: 'i-lucide-tag', to: '/keywords' },
-  { label: '初始化', icon: 'i-lucide-rocket', to: '/init' },
   { label: '任务监控', icon: 'i-lucide-activity', to: '/tasks' },
   { label: '定时任务', icon: 'i-lucide-clock', to: '/scheduler' },
   { label: '设置', icon: 'i-lucide-settings', to: '/settings' }

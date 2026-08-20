@@ -129,6 +129,9 @@
 - [x] **T138** — star 列表分页：后端 `/api/stars` 加 total + 前端 stars.vue 分页 UI（offset/limit）
   - spec：docs/superpowers/specs/2026-08-19-stars-pagination-design.md
   - AC：后端返回 `total`，前端 UPagination 翻页传 offset → 后端测试 + 前端源文件断言绿
+- [ ] **T139** — 设置页合并初始化 + 配置回填修复：settings 回填 githubUser/LLM、加 token 与拉取动作、删 init.vue 与导航项
+  - spec：docs/superpowers/specs/2026-08-19-settings-merge-init-design.md
+  - AC：settings 一致回填 + `/init` 移除 + API key 输入不因 provider=none 隐藏 → 前后端测试绿
 
 ---
 

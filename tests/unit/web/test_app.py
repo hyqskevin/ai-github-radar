@@ -192,3 +192,19 @@ def test_ac_stars_total_zero_when_empty(client: TestClient) -> None:
     data = resp.json()
     assert data["stars"] == []
     assert data["total"] == 0
+
+
+# ---------------------------------------------------------------------------
+# T139 — /api/settings/all 隐藏 github token 明文
+# ---------------------------------------------------------------------------
+
+
+def test_api_settings_all_roundtrip_and_hides_token(client: TestClient) -> None:
+    """/settings/all 保存 github_user/token,GitHub token 只回显 set 布尔,不暴露明文。"""
+    client.post("/api/settings/all", json={"github_user": "alice", "github_token": "ghp_secret123"})
+    data = client.get("/api/settings/all").json()
+    assert data["github_user"] == "alice"
+    assert data["github_token_set"] is True
+    body = client.get("/api/settings/all").text
+    assert "ghp_secret123" not in body         # 明文 token 不暴露
+    assert "github_token" not in data          # GET 响应无 token 字段

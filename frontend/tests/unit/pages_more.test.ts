@@ -124,31 +124,37 @@ describe('T128 page: scheduler', () => {
 })
 
 describe('T125 layout nav', () => {
-  it('has 8 nav items (Tasks/Scheduler/init added)', async () => {
+  it('has 7 nav items (init merged into settings)', async () => {
     const src = readFileSync(
       resolve(__dirname, '../../app/layouts/default.vue'),
       'utf-8'
     )
-    for (const label of ['推荐', '推荐列表', '我的 Star', '关键字', '初始化', '任务监控', '定时任务', '设置']) {
+    for (const label of ['推荐', '推荐列表', '我的 Star', '关键字', '任务监控', '定时任务', '设置']) {
       expect(src).toContain(label)
     }
+    expect(src).not.toContain('/init')
   })
 })
 
 
-describe('T129 page: init (one-shot setup)', () => {
-  it('renders form with github_user + github_token + no_llm toggle', () => {
-    const src = pageSource('init.vue')
-    expect(src).toContain('初始化')
-    expect(src).toContain('GitHub username')
-    expect(src).toContain('Personal Access Token')
-    expect(src).toContain('noLlm')
+describe('T139 settings merges init', () => {
+  it('init.vue no longer exists', () => {
+    const path = resolve(__dirname, '../../app/pages/init.vue')
+    expect(() => pageSource('init.vue')).toThrow()  // readFileSync throws
   })
-  it('triggers /api/stars/refresh on save', () => {
-    const src = pageSource('init.vue')
-    expect(src).toContain('/api/stars/refresh')
+
+  it('settings.vue has github + token + refresh + no_llm (init merged in)', () => {
+    const src = pageSource('settings.vue')
     expect(src).toContain('/api/settings/all')
-    expect(src).toContain('pollJob')
+    expect(src).toContain('githubToken')
+    expect(src).toContain('noLlm')
+    expect(src).toContain('/api/stars/refresh')
+  })
+
+  it('settings.vue backfills githubUser + shows API key input regardless of provider', () => {
+    const src = pageSource('settings.vue')
+    expect(src).toContain('githubUser')
+    expect(src).toContain('llmApiKey')
   })
 })
 
