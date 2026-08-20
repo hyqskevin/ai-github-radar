@@ -361,10 +361,11 @@ def api_stars_stats() -> dict:
 
 @api_router.get("/settings/llm")
 def api_get_llm_settings() -> dict:
-    """读 LLM 设置(provider + model + 是否启用 + API key 是否已设置)。"""
+    """读 LLM 设置(provider + model + 是否启用 + API key 是否已设置 + base_url)。"""
     from ai_github_radar.storage.db import init_db, session_scope
     from ai_github_radar.services.settings import (
         KEY_LLM_API_KEY,
+        KEY_LLM_BASE_URL,
         KEY_LLM_MODEL,
         KEY_LLM_PROVIDER,
         get_setting,
@@ -375,11 +376,13 @@ def api_get_llm_settings() -> dict:
         provider = get_setting(s, KEY_LLM_PROVIDER, "none") or "none"
         model = get_setting(s, KEY_LLM_MODEL, "") or ""
         api_key = get_setting(s, KEY_LLM_API_KEY, "")
+        base_url = get_setting(s, KEY_LLM_BASE_URL, "") or ""
     return {
         "provider": provider,
         "model": model,
         "api_key_set": bool(api_key),
         "enabled": provider not in ("none", ""),
+        "base_url": base_url,
     }
 
 
@@ -389,6 +392,7 @@ def api_set_llm_settings(body: dict) -> dict:
     from ai_github_radar.storage.db import init_db, session_scope
     from ai_github_radar.services.settings import (
         KEY_LLM_API_KEY,
+        KEY_LLM_BASE_URL,
         KEY_LLM_MODEL,
         KEY_LLM_PROVIDER,
         set_setting,
@@ -403,6 +407,9 @@ def api_set_llm_settings(body: dict) -> dict:
         if body.get("api_key") is not None:
             # API key 简单存文本(阶段二加 encrypt)
             set_setting(s, KEY_LLM_API_KEY, body["api_key"])
+        if body.get("base_url") is not None and body["base_url"]:
+            # T142: 自定义 OpenAI 兼容端点(MiniMax / Qwen 自建网关 / Azure 等)
+            set_setting(s, KEY_LLM_BASE_URL, body["base_url"])
     return api_get_llm_settings()
 
 
@@ -414,6 +421,7 @@ def api_get_all_settings() -> dict:
         KEY_GITHUB_TOKEN,
         KEY_GITHUB_USER,
         KEY_LLM_API_KEY,
+        KEY_LLM_BASE_URL,
         KEY_LLM_MODEL,
         KEY_LLM_PROVIDER,
         get_setting,
@@ -425,6 +433,7 @@ def api_get_all_settings() -> dict:
         out["llm_provider"] = get_setting(s, KEY_LLM_PROVIDER, "none")
         out["llm_model"] = get_setting(s, KEY_LLM_MODEL, "")
         out["llm_api_key_set"] = bool(get_setting(s, KEY_LLM_API_KEY, ""))
+        out["llm_base_url"] = get_setting(s, KEY_LLM_BASE_URL, "") or ""
         out["github_user"] = get_setting(s, KEY_GITHUB_USER, "")
         out["github_token_set"] = bool(get_setting(s, KEY_GITHUB_TOKEN, ""))
     return out

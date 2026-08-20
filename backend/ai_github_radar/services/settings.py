@@ -63,6 +63,7 @@ def list_settings(s: Session) -> dict[str, str]:
 KEY_LLM_PROVIDER = "llm.provider"
 KEY_LLM_MODEL = "llm.model"
 KEY_LLM_API_KEY = "llm.api_key"
+KEY_LLM_BASE_URL = "llm.base_url"  # T142: 自定义 OpenAI 兼容 API 端点
 KEY_GITHUB_USER = "github.user"
 KEY_GITHUB_TOKEN = "github.token"
 KEY_SCAN_INTERVAL_CRON = "scan.cron"  # cron 表达式

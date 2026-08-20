@@ -9,6 +9,7 @@ const config = ref({
   llmProvider: 'none',
   llmModel: '',
   llmApiKey: '',
+  llmBaseUrl: '',
   apiKeySet: false,
   githubUser: '',
   githubToken: '',
@@ -26,11 +27,13 @@ async function loadConfig() {
       llm_provider: string
       llm_model: string
       llm_api_key_set: boolean
+      llm_base_url?: string
       github_user: string
       github_token_set: boolean
     }>('/api/settings/all')
     config.value.llmProvider = r.llm_provider || 'none'
     config.value.llmModel = r.llm_model || ''
+    config.value.llmBaseUrl = r.llm_base_url || ''
     config.value.apiKeySet = !!r.llm_api_key_set
     config.value.githubUser = r.github_user || ''
     config.value.githubTokenSet = !!r.github_token_set
@@ -46,13 +49,15 @@ async function saveConfig() {
     // LLM 配置
     const llmBody: any = { provider: config.value.llmProvider, model: config.value.llmModel }
     if (config.value.llmApiKey) llmBody.api_key = config.value.llmApiKey
-    const llm = await $fetch<{ provider: string; model: string; api_key_set: boolean }>('/api/settings/llm', {
+    if (config.value.llmBaseUrl) llmBody.base_url = config.value.llmBaseUrl
+    const llm = await $fetch<{ provider: string; model: string; api_key_set: boolean; base_url: string }>('/api/settings/llm', {
       method: 'POST',
       body: llmBody,
     })
     config.value.llmProvider = llm.provider
     config.value.llmModel = llm.model
     config.value.apiKeySet = llm.api_key_set
+    config.value.llmBaseUrl = llm.base_url || ''
     config.value.llmApiKey = ''
 
     // GitHub 配置
@@ -154,6 +159,13 @@ onMounted(loadConfig)
           <UInput
             v-model="config.llmProvider"
             placeholder="例:deepseek"
+          />
+        </UFormField>
+
+        <UFormField v-if="config.llmProvider && config.llmProvider !== 'none'" label="Base URL" help="OpenAI 兼容 API 地址;留空走 provider 默认(MiniMax / Qwen 自建网关 / Azure 等可填自定义)">
+          <UInput
+            v-model="config.llmBaseUrl"
+            placeholder="例:https://api.minimax.chat/v1"
           />
         </UFormField>
 

@@ -137,6 +137,9 @@
 - [x] **T141** — 修复 layout.test.ts REPO_ROOT 路径 bug：`../../../..` → `../../..`
   - spec：docs/superpowers/specs/2026-08-20-layout-test-path-fix-design.md
   - AC：layout.test.ts 7/7 绿，git diff 仅改 REPO_ROOT 一行
+- [x] **T142** — 设置页 LLM Base URL：后端 KEY_LLM_BASE_URL + /settings/llm POST/GET + /settings/all 返回；前端新增 Base URL 输入；summarizer 读取
+  - spec：docs/superpowers/specs/2026-08-20-llm-base-url-setting-design.md
+  - AC：浏览器 Base URL 输入框可见并可填；后端 roundtrip 测试 3/3 绿；audit-loop 0 错误
 
 ---
 

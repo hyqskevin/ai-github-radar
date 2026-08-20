@@ -55,6 +55,7 @@ def _resolve_llm_from_db_settings() -> Optional[_ResolvedLLM]:
     """从 SQLite settings 表读 provider/model/api_key(用户在前端配的)。"""
     from ai_github_radar.services.settings import (
         KEY_LLM_API_KEY,
+        KEY_LLM_BASE_URL,
         KEY_LLM_MODEL,
         KEY_LLM_PROVIDER,
         get_setting,
@@ -66,6 +67,7 @@ def _resolve_llm_from_db_settings() -> Optional[_ResolvedLLM]:
             provider_str = (get_setting(s, KEY_LLM_PROVIDER, "") or "").strip()
             model = (get_setting(s, KEY_LLM_MODEL, "") or "").strip()
             api_key = (get_setting(s, KEY_LLM_API_KEY, "") or "").strip()
+            base_url = (get_setting(s, KEY_LLM_BASE_URL, "") or "").strip()
     except Exception:  # noqa: BLE001
         return None
 
@@ -83,6 +85,7 @@ def _resolve_llm_from_db_settings() -> Optional[_ResolvedLLM]:
         provider=provider,
         model=model or spec.default_model,
         api_key=api_key,
+        base_url=base_url or None,
     )
 
 

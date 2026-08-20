@@ -208,3 +208,47 @@ def test_api_settings_all_roundtrip_and_hides_token(client: TestClient) -> None:
     body = client.get("/api/settings/all").text
     assert "ghp_secret123" not in body         # 明文 token 不暴露
     assert "github_token" not in data          # GET 响应无 token 字段
+
+
+# ---------------------------------------------------------------------------
+# T142 — LLM base_url 持久化 + 回显
+# ---------------------------------------------------------------------------
+
+
+def test_api_settings_llm_base_url_roundtrip(client: TestClient) -> None:
+    """AC-1: /settings/llm POST 接受 base_url;GET 回显;base_url 不出现在 /settings/all GET(LLM 字段以 /settings/llm 为权威)。"""
+    r = client.post(
+        "/api/settings/llm",
+        json={
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "api_key": "sk-test-xxx",
+            "base_url": "https://api.minimax.chat/v1",
+        },
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["provider"] == "openai"
+    assert data["model"] == "gpt-4o-mini"
+    assert data["api_key_set"] is True
+
+    r2 = client.get("/api/settings/llm")
+    assert r2.status_code == 200
+    assert r2.json()["base_url"] == "https://api.minimax.chat/v1"
+
+
+def test_api_settings_llm_base_url_empty_preserves_default(client: TestClient) -> None:
+    """AC-7: base_url 留空不保存(provider 默认 base_url 仍生效)。"""
+    client.post("/api/settings/llm", json={"provider": "openai", "model": "gpt-4o"})
+    r = client.get("/api/settings/llm")
+    assert r.json()["base_url"] == ""  # 留空等价未设
+
+
+def test_api_settings_all_returns_llm_base_url(client: TestClient) -> None:
+    """AC-2: /settings/all 也带 llm_base_url 字段,前端 loadConfig 能读到。"""
+    client.post(
+        "/api/settings/llm",
+        json={"provider": "deepseek", "api_key": "sk-x", "base_url": "https://api.deepseek.com/v1"},
+    )
+    data = client.get("/api/settings/all").json()
+    assert data["llm_base_url"] == "https://api.deepseek.com/v1"
