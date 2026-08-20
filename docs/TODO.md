@@ -134,6 +134,9 @@
   - AC：settings 一致回填 + `/init` 移除 + API key 输入不因 provider=none 隐藏 → 前后端测试绿
 - [x] **T140** — LLM 三参数改为 UInput：provider / model / api_key 都用文本输入（支持任意模型），删除原 USelectMenu + llmProviders 常量
   - AC：settings.vue 三段皆 `UInput`，无 `USelectMenu` / `llmProviders`；pages_more 测试断言同步更新
+- [x] **T141** — 修复 layout.test.ts REPO_ROOT 路径 bug：`../../../..` → `../../..`
+  - spec：docs/superpowers/specs/2026-08-20-layout-test-path-fix-design.md
+  - AC：layout.test.ts 7/7 绿，git diff 仅改 REPO_ROOT 一行
 
 ---
 
