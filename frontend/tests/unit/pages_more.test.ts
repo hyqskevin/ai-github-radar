@@ -41,6 +41,13 @@ describe('T107 page: keywords', () => {
     expect(src).toContain('handleToggle')
     expect(src).toContain('handleDelete')
   })
+
+  it('T144: has 提取关键字 button calling /api/keywords/extract', () => {
+    const src = pageSource('keywords.vue')
+    expect(src).toContain('提取关键字')
+    expect(src).toContain('/api/keywords/extract')
+    expect(src).toContain('handleExtract')
+  })
 })
 
 describe('T108 page: recommendations', () => {
@@ -102,6 +109,10 @@ describe('T125 page: settings', () => {
     // T143: 每张卡片独立保存按钮
     expect(src).toContain('保存 LLM 配置')
     expect(src).toContain('保存 GitHub 配置')
+    // T144: 初始化卡片已迁出(settings 只剩配置,动作在 /stars 和 /keywords)
+    expect(src).not.toContain('初始化(拉取 Star + 提取关键字)')
+    expect(src).not.toContain('保存配置 + 立即拉取')
+    expect(src).not.toContain('初始化流程')
     expect(src).not.toContain('USelectMenu')
     expect(src).not.toContain('llmProviders')
   })
@@ -155,12 +166,13 @@ describe('T139 settings merges init', () => {
     expect(() => pageSource('init.vue')).toThrow()  // readFileSync throws
   })
 
-  it('settings.vue has github + token + refresh + no_llm (init merged in)', () => {
+  it('settings.vue has github + token (init merged in T139, then split in T144)', () => {
     const src = pageSource('settings.vue')
     expect(src).toContain('/api/settings/all')
     expect(src).toContain('githubToken')
-    expect(src).toContain('noLlm')
-    expect(src).toContain('/api/stars/refresh')
+    // T144: noLlm + /api/stars/refresh 已迁出到 /keywords 和 /stars
+    expect(src).not.toContain('noLlm')
+    expect(src).not.toContain('/api/stars/refresh')
   })
 
   it('settings.vue backfills githubUser + shows API key input regardless of provider', () => {
@@ -176,6 +188,12 @@ describe('T129 page: stars has pull button', () => {
     const src = pageSource('stars.vue')
     expect(src).toContain('/api/stars/refresh')
     expect(src).toContain('拉取 Star')
+  })
+
+  it('T144: stars.vue no longer posts to /api/keywords/extract', () => {
+    const src = pageSource('stars.vue')
+    // T144: 提取关键字入口迁到 keywords.vue;stars 页不再调 extract
+    expect(src).not.toContain('/api/keywords/extract')
   })
 })
 

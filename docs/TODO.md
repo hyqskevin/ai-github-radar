@@ -143,6 +143,9 @@
 - [x] **T143** — 设置页每卡片独立保存按钮：LLM 卡「保存 LLM 配置」、GitHub 卡「保存 GitHub 配置」、初始化卡「保存配置 + 立即拉取」
   - spec：docs/superpowers/specs/2026-08-20-per-card-save-buttons-design.md
   - AC：浏览器 DOM 快照三个按钮 visible；pages_more 测试断言两字串；audit-loop 0 错误
+- [x] **T144** — 拆分 init 任务：后端拆 `run_init` 为 `run_fetch_stars` + `run_extract_keywords`；前端 settings 移除 init 卡片，stars.vue「拉取 Star」调 `/api/stars/refresh`，keywords.vue 新增「提取关键字」调 `/api/keywords/extract`
+  - spec：docs/superpowers/specs/2026-08-20-split-init-into-stars-and-keywords-design.md
+  - AC：test_app.py 2/2 (fetch_stars/extract_keywords job 名 + payload) + pages_more 24/24 + 浏览器三页 (settings 无 init、stars 有「拉取 Star」、keywords 有「提取关键字」)
 
 ---
 

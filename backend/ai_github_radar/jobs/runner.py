@@ -65,7 +65,7 @@ def submit_task(
 
 
 # 任务列表(给前端 /api/jobs/types 用)
-TASK_TYPES = ["init", "scan"]
+TASK_TYPES = ["init", "fetch_stars", "extract_keywords", "scan"]
 
 
 # ---------------------------------------------------------------------------
@@ -73,41 +73,21 @@ TASK_TYPES = ["init", "scan"]
 # ---------------------------------------------------------------------------
 
 
-def run_init(user: str, no_llm: bool = False) -> dict:
-    """跑 init(用 CLI 的逻辑,但不 click)。
-
-    优先级:
-    1. 显式传的 user 参数
-    2. SQLite settings 表的 github.user (T125:前端 /api/settings/all 持久化)
-    3. .env 的 RADAR_USER
-    """
-    from ai_github_radar.github.client import GitHubClient
-    from ai_github_radar.keywords import (
-        detect_provider,
-        extract_keywords_tf_idf,
-        extract_keywords_via_llm,
-    )
+def _resolve_github_user_token(user: str) -> tuple[str, str]:
+    """共享:从 db settings / .env 取 user + token。"""
     from ai_github_radar.storage.db import init_db, session_scope
-    from ai_github_radar.storage.repositories import (
-        KeywordRepository,
-        StarRepository,
-    )
     from ai_github_radar.config import get_settings
     from ai_github_radar.services.settings import (
         KEY_GITHUB_TOKEN,
         KEY_GITHUB_USER,
         get_setting,
     )
-    from ai_github_radar.cli.init_cmd import star_to_doc_dict
 
-    init_db()  # 确保 settings 表存在
-
-    # 1. 先看 SQLite settings 表(用户在 /init 页面存的配置)
+    init_db()
     with session_scope() as s:
         db_user = get_setting(s, KEY_GITHUB_USER, "") or ""
         db_token = get_setting(s, KEY_GITHUB_TOKEN, "") or ""
 
-    # 2. fallback 到 .env(T012 CLI 兼容)
     name = user or db_user
     token = db_token
     if not name or not token:
@@ -119,7 +99,6 @@ def run_init(user: str, no_llm: bool = False) -> dict:
                 if settings.github_token else None
             )
         except Exception:  # noqa: BLE001
-            # .env 缺失时跳过,user/token 必须显式给
             pass
     if not name:
         raise ValueError("user required (set github.user in /init page or RADAR_USER in .env)")
@@ -127,6 +106,19 @@ def run_init(user: str, no_llm: bool = False) -> dict:
         raise ValueError(
             "github token required — 在 /init 页面填 GitHub PAT,或在 .env 设 GITHUB_TOKEN"
         )
+    return name, token
+
+
+def run_fetch_stars(user: str = "") -> dict:
+    """T144: 仅拉 GitHub stars 写到 stars 表,不提取关键字。
+
+    返回: {"user": str, "stars": int}
+    """
+    from ai_github_radar.github.client import GitHubClient
+    from ai_github_radar.storage.db import session_scope
+    from ai_github_radar.storage.repositories import StarRepository
+
+    name, token = _resolve_github_user_token(user)
 
     gh = GitHubClient(token=token)
     star_dicts = gh.fetch_stars(name)
@@ -134,24 +126,57 @@ def run_init(user: str, no_llm: bool = False) -> dict:
     with session_scope() as s:
         star_repo = StarRepository(s)
         n_stars = star_repo.upsert_many(star_dicts)
-        docs = [star_to_doc_dict(d) for d in star_dicts]
+
+    return {"user": name, "stars": n_stars}
+
+
+def run_extract_keywords(no_llm: bool = False) -> dict:
+    """T144: 仅从已有 stars 提取关键字写 keywords 表,不调用 GitHub。
+
+    返回: {"keywords": int, "kw_method": str}
+    """
+    from ai_github_radar.keywords import (
+        detect_provider,
+        extract_keywords_tf_idf,
+        extract_keywords_via_llm,
+    )
+    from ai_github_radar.storage.db import session_scope
+    from ai_github_radar.storage.repositories import (
+        KeywordRepository,
+        StarRepository,
+    )
+    from ai_github_radar.cli.init_cmd import star_to_doc_dict
+
+    with session_scope() as s:
+        star_repo = StarRepository(s)
+        stars = star_repo.list_all()
+        docs = [star_to_doc_dict(d) for d in stars]
+
         provider = None if no_llm else detect_provider()
         if provider is None:
             kw_results = extract_keywords_tf_idf(docs, top_n=50, min_df=2)
-            source = "auto"
             kw_method = "TF-IDF"
         else:
             kw_results = extract_keywords_via_llm(docs, provider=provider, max_keywords=50)
-            source = "auto"
             kw_method = f"LLM ({provider.value})"
         kw_repo = KeywordRepository(s)
-        n_kws = kw_repo.bulk_upsert_from_tfidf(kw_results, source=source)
+        n_kws = kw_repo.bulk_upsert_from_tfidf(kw_results, source="auto")
 
+    return {"keywords": n_kws, "kw_method": kw_method}
+
+
+def run_init(user: str, no_llm: bool = False) -> dict:
+    """跑 init(组合:拉 star + 提取关键字)。scheduler 与 CLI 仍用,前端不再调用。
+
+    顺序:fetch_stars → extract_keywords。任一失败抛错。
+    """
+    fetch_result = run_fetch_stars(user=user)
+    kw_result = run_extract_keywords(no_llm=no_llm)
     return {
-        "user": name,
-        "stars": n_stars,
-        "keywords": n_kws,
-        "kw_method": kw_method,
+        "user": fetch_result["user"],
+        "stars": fetch_result["stars"],
+        "keywords": kw_result["keywords"],
+        "kw_method": kw_result["kw_method"],
     }
 
 

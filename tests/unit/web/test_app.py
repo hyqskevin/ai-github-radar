@@ -252,3 +252,37 @@ def test_api_settings_all_returns_llm_base_url(client: TestClient) -> None:
     )
     data = client.get("/api/settings/all").json()
     assert data["llm_base_url"] == "https://api.deepseek.com/v1"
+
+
+# ---------------------------------------------------------------------------
+# T144 — /api/stars/refresh 只拉 stars;/api/keywords/extract 只提取
+# ---------------------------------------------------------------------------
+
+
+def test_api_stars_refresh_creates_fetch_stars_job(client: TestClient) -> None:
+    """AC-2: /api/stars/refresh 触发 fetch_stars 任务(不再调 extract)。"""
+    r = client.post("/api/stars/refresh", json={"user": "alice"})
+    assert r.status_code == 200
+    data = r.json()
+    assert "job_id" in data
+
+    jobs = client.get("/api/jobs").json()["jobs"]
+    job = next((j for j in jobs if j["id"] == data["job_id"]), None)
+    assert job is not None
+    assert job["name"] == "fetch_stars"
+    # 不再是 init
+    assert job["name"] != "init"
+
+
+def test_api_keywords_extract_creates_extract_keywords_job(client: TestClient) -> None:
+    """AC-3: /api/keywords/extract 触发 extract_keywords 任务,带 no_llm 参数。"""
+    r = client.post("/api/keywords/extract", json={"no_llm": True})
+    assert r.status_code == 200
+    data = r.json()
+    assert "job_id" in data
+
+    jobs = client.get("/api/jobs").json()["jobs"]
+    job = next((j for j in jobs if j["id"] == data["job_id"]), None)
+    assert job is not None
+    assert job["name"] == "extract_keywords"
+    assert job["payload"] == {"no_llm": True}

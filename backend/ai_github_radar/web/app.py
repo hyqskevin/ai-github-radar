@@ -518,13 +518,13 @@ def api_clear_jobs(body: Optional[dict] = None) -> dict:
 
 @api_router.post("/stars/refresh")
 def api_refresh_stars(body: Optional[dict] = None) -> dict:
-    """后台触发 init(拉 GitHub stars + 提取关键字)。
+    """后台触发 fetch_stars (T144: 仅拉 GitHub stars,不提取关键字)。
 
-    body: {user?: str, no_llm?: bool}
+    body: {user?: str}
     返回: {job_id, status_url} —前端轮询 /api/jobs 查 status。
     """
     from ai_github_radar.storage.db import init_db, session_scope
-    from ai_github_radar.jobs.runner import run_init, submit_task
+    from ai_github_radar.jobs.runner import run_fetch_stars, submit_task
 
     body = body or {}
     user = body.get("user") or ""
@@ -532,11 +532,37 @@ def api_refresh_stars(body: Optional[dict] = None) -> dict:
     init_db()
     with session_scope() as s:
         _, job_id = submit_task(
-            "init",
+            "fetch_stars",
             s,
-            run_init,
+            run_fetch_stars,
             user=user,
-            no_llm=body.get("no_llm", False),
+        )
+    return {
+        "job_id": job_id,
+        "status": "running",
+        "poll_url": f"/api/jobs",
+    }
+
+
+@api_router.post("/keywords/extract")
+def api_extract_keywords(body: Optional[dict] = None) -> dict:
+    """T144: 后台触发 extract_keywords (从已有 stars 提关键字,不调 GitHub)。
+
+    body: {no_llm?: bool}
+    """
+    from ai_github_radar.storage.db import init_db, session_scope
+    from ai_github_radar.jobs.runner import run_extract_keywords, submit_task
+
+    body = body or {}
+    no_llm = bool(body.get("no_llm", False))
+
+    init_db()
+    with session_scope() as s:
+        _, job_id = submit_task(
+            "extract_keywords",
+            s,
+            run_extract_keywords,
+            no_llm=no_llm,
         )
     return {
         "job_id": job_id,
